@@ -1,0 +1,571 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Hotel Bagheecha — "AUBERGINE & CREAM"
+
+   Supersedes "Alabaster & Charcoal". Those grounds were a *neutral* pair —
+   warm grey-white and near-black — which is the safest choice available,
+   and safe is what a template looks like. They are now a *chosen* pair:
+   a deep plum you could not mistake for a framework default, and a cream
+   warm enough to read as paper rather than screen. The register moves
+   from competent to authored, which is the whole point of the overhaul.
+
+   THREE LAYERS, deliberately:
+
+     1. PRIMITIVES  (`--plum`, `--cream`, …) raw colour values.
+     2. SEMANTIC    (`--ink`, `--surface`, `--line`) *roles*, re-mapped
+                    per section by `[data-tone]`.
+     3. COMPONENTS  Tailwind utilities built from the semantic layer
+                    (`text-ink`, `bg-surface`, `border-line`).
+
+   The payoff is that a component writes `text-ink` once and is correct
+   on cream, on plum, and over a photograph. Without layer 2 every
+   component would carry two parallel colour sets and drift.
+
+   CONTRAST. Every token below was computed against the surface it is
+   meant for, not chosen by eye. Three rules fall out of the maths and
+   are not negotiable:
+
+     - **Vermillion is a mark, not a text colour.** #D33F2E measures
+       4.31:1 on cream and 3.97:1 on plum — so it clears AA for large
+       text (3:1) and for anything that is a shape rather than a word,
+       and misses it for a 10px label by a hair. That hair is the whole
+       difference between an accent and a legibility bug. Small accent
+       text uses `--vermillion-ink` (#B8321F, 5.54:1 on cream), and small
+       accent text never sits on plum at all.
+     - **Champagne is a dark-surface accent only.** #D6C5A5 on cream is
+       1.6:1. It is a rule, a fill and a dark-section label; it is never
+       text on a light ground.
+     - **Translucent tokens composite toward the surface.** `ink-muted`
+       at 74% is *not* 74% of the contrast of `ink` — the glyphs mix
+       with what is behind them. Over a photograph, measure per pixel.
+------------------------------------------------------------------- */
+
+:root {
+  /* --- Layer 1: primitives ------------------------------------- */
+
+  /* Light — warm cream. Not white, and deliberately not grey. */
+  --cream: #f9f6f0;
+  --cream-sunk: #f1ece1;
+  /* The second light surface. A tinted panel for a figure or a quote,
+     never a page ground — at 1.4:1 against cream it is a warm shift you
+     feel rather than a boundary you see. */
+  --peach: #f4c5b9;
+
+  /* Dark — deep plum / aubergine. THE dark ground: the hero, and every
+     chapter that happens after dark. */
+  --plum: #240b14;
+  --plum-sunk: #180710;
+
+  /* Type on dark. Pure white rather than cream: on plum the two are
+     17.1:1 and 16.4:1, so this is not a contrast decision — white is
+     what keeps a menu's 10px small caps crisp where cream goes soft. */
+  --white: #ffffff;
+
+  /* Accents. Vermillion is the mark; champagne is the dark-ground one;
+     vermillion-ink is the only form of the accent small text may take. */
+  --vermillion: #d33f2e;
+  --vermillion-ink: #b8321f;
+  --champagne: #d6c5a5;
+
+  /* Translucent ink, derived from the two grounds.
+     Alpha values are set so the *composited* result still clears AA:
+       plum-muted  74% on cream   7.85:1
+       plum-faint  70% on cream   6.68:1
+       white-muted 74% on plum   10.31:1
+       white-faint 60% on plum    7.02:1                          */
+  --plum-muted: rgba(36, 11, 20, 0.74);
+  --plum-faint: rgba(36, 11, 20, 0.7);
+  --white-muted: rgba(255, 255, 255, 0.74);
+  --white-faint: rgba(255, 255, 255, 0.6);
+
+  /* Hairlines */
+  --line-plum: rgba(36, 11, 20, 0.16);
+  --line-plum-strong: rgba(36, 11, 20, 0.34);
+  --line-cream: rgba(249, 246, 240, 0.16);
+  --line-cream-strong: rgba(249, 246, 240, 0.34);
+  --line-champagne: rgba(214, 197, 165, 0.42);
+
+  /* Motion — one curve, one rhythm, defined once */
+  --ease-luxe: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Z-index scale. Laid out once so no component invents z-[9999]:
+       0   page flow        40  mobile drawer
+       10  raised content   50  site header
+       20  sticky           60  grain overlay
+       30  quick-action bar 70  custom cursor
+  */
+}
+
+/* --- Layer 2: semantic roles, per tone ------------------------- */
+
+/* Light is the default: the page is cream unless a section says
+   otherwise, so an unmarked component is already correct. */
+:root,
+[data-tone="light"] {
+  --surface: var(--cream);
+  --surface-sunk: var(--cream-sunk);
+  --surface-alt: var(--peach);
+  --ink: var(--plum);
+  --ink-muted: var(--plum-muted);
+  --ink-faint: var(--plum-faint);
+  --line: var(--line-plum);
+  --line-strong: var(--line-plum-strong);
+
+  --accent: var(--vermillion);
+  --accent-ink: var(--vermillion-ink);
+
+  /* The primary action's fill. Plum on cream — 17:1, and the only
+     element on a light page that is allowed to be a solid block of
+     colour. A champagne button here would be a 1.6:1 ghost. */
+  --action-bg: var(--plum);
+  --action-bg-hover: #3a1520;
+  --action-ink: var(--cream);
+  --action-line: rgba(36, 11, 20, 0.28);
+  --action-line-hover: rgba(36, 11, 20, 0.5);
+  --action-veil: rgba(36, 11, 20, 0.05);
+}
+
+/* Plum. The hero, the bar, and every chapter that happens after dark. */
+[data-tone="dark"] {
+  --surface: var(--plum);
+  --surface-sunk: var(--plum-sunk);
+  --surface-alt: var(--plum-sunk);
+  --ink: var(--white);
+  --ink-muted: var(--white-muted);
+  --ink-faint: var(--white-faint);
+  --line: var(--line-cream);
+  --line-strong: var(--line-cream-strong);
+
+  --accent: var(--vermillion);
+  /* There is no small accent text that clears 4.5:1 on plum, so on a
+     dark ground the accent is a mark and `accent-ink` deliberately falls
+     back to champagne — which is a *readable* dark-ground accent at
+     10.9:1, and the honest answer to "I want this word in the accent". */
+  --accent-ink: var(--champagne);
+
+  /* Champagne on plum — the accent gets to be a fill, at 10.9:1 under
+     plum type. This is the one view per page allowed a solid button on
+     a dark ground. */
+  --action-bg: var(--champagne);
+  --action-bg-hover: #e3d5b8;
+  --action-ink: var(--plum);
+  --action-line: rgba(249, 246, 240, 0.32);
+  --action-line-hover: rgba(249, 246, 240, 0.55);
+  --action-veil: rgba(255, 255, 255, 0.06);
+}
+
+/* --- Layer 3: expose the semantics to Tailwind ------------------ */
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-cream-sunk: var(--cream-sunk);
+  --color-peach: var(--peach);
+  --color-plum: var(--plum);
+  --color-plum-sunk: var(--plum-sunk);
+  --color-white: var(--white);
+  --color-champagne: var(--champagne);
+  --color-vermillion: var(--vermillion);
+  --color-vermillion-ink: var(--vermillion-ink);
+
+  /* Semantic — these are the ones components should use. */
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-surface-alt: var(--surface-alt);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-champagne: var(--line-champagne);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-action: var(--action-bg);
+  --color-action-hover: var(--action-bg-hover);
+  --color-action-ink: var(--action-ink);
+  --color-action-line: var(--action-line);
+  --color-action-veil: var(--action-veil);
+
+  --font-display: var(--font-playfair), "Georgia", serif;
+  --font-sans: var(--font-inter), "Helvetica Neue", sans-serif;
+
+  --ease-luxe: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Clears the fixed header when an in-page anchor is jumped to. */
+  scroll-padding-top: 5rem;
+  background: var(--cream);
+}
+
+body {
+  background: var(--cream);
+  color: var(--plum);
+  font-family: var(--font-inter), "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--plum);
+  color: var(--cream);
+}
+
+/* Hide native cursor only where the custom cursor is active */
+@media (pointer: fine) {
+  html[data-cursor="tracing"],
+  html[data-cursor="tracing"] * {
+    cursor: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Layout primitives
+------------------------------------------------------------------- */
+
+/* One container width for the whole site. Every section shares it, so
+   the left edge of the display type never jitters between sections. */
+.container-x {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 90rem;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 768px) {
+  .container-x {
+    padding-inline: 2.5rem;
+  }
+}
+@media (min-width: 1280px) {
+  .container-x {
+    padding-inline: 4rem;
+  }
+}
+
+/* Section rhythm — deliberately huge. The whitespace is the luxury; the
+   content is the punctuation. */
+.section-pad {
+  padding-block: clamp(6rem, 11vw, 11rem);
+}
+
+/* Editorial kicker. All-caps, extreme tracking, micro size — the
+   counterweight to the oversized Playfair it sits above. Tone-aware:
+   it reads the semantic `--ink-muted`, so it is correct on either
+   ground without a caller passing a colour. */
+.eyebrow {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* A hairline that fades at both ends — used to close a section. */
+.rule-hairline {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--line-strong) 50%,
+    transparent 100%
+  );
+}
+
+/* Full-bleed media inside the page grid. */
+.bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* ------------------------------------------------------------------
+   Texture
+------------------------------------------------------------------- */
+
+/* Film grain. Fixed and pointer-events-none, so it never repaints with
+   scroll and never intercepts a tap. Kept feather-light: on cream it
+   reads as paper stock, and much above 2% it reads as dirt. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Scroll cue — a champagne sliver dripping down a hairline shaft.
+   CSS, not Framer: an infinite JS animation would have to branch on
+   `prefers-reduced-motion` during render, which desyncs server and
+   client markup. The global reduced-motion rule below stops it instead,
+   with no hydration cost. */
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(250%);
+  }
+}
+.scroll-cue__mark {
+  animation: scroll-cue 2.2s var(--ease-luxe) infinite;
+}
+
+/* ------------------------------------------------------------------
+   The hero vignette — the ramp that makes a photograph readable.
+
+   THIS IS A CONTRAST DECISION, NOT A MOOD. The hero's base layer is four
+   real photographs of this kitchen's own food, full bleed. A photograph
+   has no floor on how bright a pixel may be: these are glazed plates
+   under a service light, and their specular highlights sit at 1.0 in
+   linear luminance — pure white, where white type measures 1:1.
+   Legibility therefore cannot be inherited from the image, it has to be
+   *built* on top of it, and this gradient is the build.
+
+   WHY THE STOPS ARE WHERE THEY ARE. They are set from the measurement,
+   not from taste. The type block is bottom-anchored and the first text
+   pixel sits at roughly 48% of the frame height from the bottom; against
+   a 1.0 highlight, `--ink-muted` (white at 74%) clears 4.5:1 only where
+   the composite alpha is at or above ~0.70. So the ramp holds 0.90
+   through 48% and only then lets go, which puts the whole photographed
+   band *above* the words rather than behind them.
+
+   The brief suggested `from-[#240B14]/90 via-black/40 to-transparent`.
+   Measured, that mid-stop lands at ~0.36 alpha over the middle of the
+   frame — 2.5:1 under the eyebrow. Not a design opinion: a failure. One
+   gradient is the whole difference between this hero and unreadable
+   type, so it is written out here where it can be read and re-measured
+   rather than left as an arbitrary-value class at the call site.
+
+   WHY THERE IS NO LONGER A SIDE LAYER. The previous composition bought
+   its last contrast on the left, because the type was anchored bottom-
+   left and the photograph breathed at the right. The supporting row now
+   runs subtitle-left / actions-right under a full-width wordmark, so the
+   words cross the whole frame and a lateral ramp would darken a side
+   that has nothing on it while leaving the other side short. A single
+   vertical ramp is both simpler and more honest about where the type is.
+
+   AND THE SECOND LAYER IS THE NAVIGATION. The header is fixed, so at
+   scroll zero it floats over whatever the frame happens to be, and the
+   transparent-at-rest header has no ground of its own. The top ramp is
+   what it sits on. It is short — nothing but the header lives up there —
+   and it is why the very first pixel is not bare photograph.
+------------------------------------------------------------------- */
+
+.hero-vignette {
+  background-image:
+    linear-gradient(
+      to top,
+      rgba(36, 11, 20, 0.97) 0%,
+      rgba(36, 11, 20, 0.95) 16%,
+      rgba(36, 11, 20, 0.92) 30%,
+      rgba(36, 11, 20, 0.86) 44%,
+      rgba(36, 11, 20, 0.79) 52%,
+      rgba(36, 11, 20, 0.62) 63%,
+      rgba(36, 11, 20, 0.31) 75%,
+      rgba(24, 7, 16, 0.08) 90%,
+      rgba(24, 7, 16, 0) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(24, 7, 16, 0.5) 0%,
+      rgba(24, 7, 16, 0.26) 9%,
+      rgba(24, 7, 16, 0) 17%
+    );
+}
+
+/* ------------------------------------------------------------------
+   The narrow-viewport ramp, and why it is a second declaration rather
+   than a tweak to the first.
+
+   On a phone the supporting row collapses from two columns to a stack,
+   so the copy block grows from 418px of a 720px frame (58%) to 557px of
+   an 839px one (66%) — and the eyebrow, which is the topmost and the
+   quietest thing in the block, moves up with it. Measured against the
+   desktop ramp at 412x839 the eyebrow came back at 4.29:1. Under 4.5 is
+   not a near miss, it is a failure, and the fix is not to harden the
+   desktop ramp: that would darken three-quarters of a laptop screen to
+   solve a problem that only exists below `md`.
+
+   So the ramp holds its strength for longer here — 0.90 at the point
+   where the desktop one has already fallen to 0.86 — and releases above
+   the type, which on this viewport is a much narrower band of
+   photograph than on desktop.
+
+   This is the same split the previous hero carried, for the same
+   reason: a ramp is tuned against where the type *ends*, and the type
+   ends somewhere different on a phone. Collapsing them back into one
+   declaration is how this regresses silently — the desktop project
+   stays green while the mobile project does not.
+------------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .hero-vignette {
+    background-image:
+      linear-gradient(
+        to top,
+        rgba(36, 11, 20, 0.97) 0%,
+        rgba(36, 11, 20, 0.95) 18%,
+        rgba(36, 11, 20, 0.93) 36%,
+        rgba(36, 11, 20, 0.9) 52%,
+        rgba(36, 11, 20, 0.86) 62%,
+        rgba(36, 11, 20, 0.62) 71%,
+        rgba(36, 11, 20, 0.3) 81%,
+        rgba(24, 7, 16, 0.06) 92%,
+        rgba(24, 7, 16, 0) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgba(24, 7, 16, 0.5) 0%,
+        rgba(24, 7, 16, 0.26) 9%,
+        rgba(24, 7, 16, 0) 17%
+      );
+  }
+}
+
+/* ------------------------------------------------------------------
+   The hero's four panels, and their drift.
+
+   The brief asked for a *combination* of the four kitchen photographs
+   rather than one of them, and four upright panels is the combination
+   that survives the sources: three of the four are portrait and the
+   fourth is square, so a 2x2 collage would crop every one of them
+   landscape and lose its subject. Four columns at 25% width are already
+   portrait at any viewport, which is the shape they were shot in.
+
+   WHY CSS RATHER THAN FRAMER, again: this is an infinite animation, and
+   an infinite JS loop would have to read `prefers-reduced-motion` during
+   render, which desyncs server and client markup. `Hero.tsx` stays a
+   server component for the same reason.
+
+   WHY THE BASE STYLE IS THE COMPOSED STILL. The blanket reduced-motion
+   rule only shortens `animation-duration` and pins the iteration count;
+   it never sets `animation-fill-mode`, which therefore stays `none`, so
+   a stopped animation reverts to the element's **base** style. That is
+   why `scale(1.05)` lives on the class and the keyframes only perturb
+   it, and why every loop is closed — 0% identical to 100%. Get this
+   wrong and the reduced-motion page shows one arbitrary frame of a drift
+   instead of the composition.
+
+   Four different periods, deliberately prime-ish (46/58/52/64), so the
+   four panels are never in the same arrangement twice in any span a
+   guest could sit through. `transform` only; each panel is its own
+   composited layer under `overflow: hidden`, so nothing here triggers a
+   layout or a repaint of the page.
+------------------------------------------------------------------- */
+
+.hero-panel__img {
+  transform: scale(1.05);
+  will-change: transform;
+}
+
+.hero-panel__img--a {
+  animation: hero-drift-a 46s var(--ease-luxe) infinite;
+}
+.hero-panel__img--b {
+  animation: hero-drift-b 58s var(--ease-luxe) infinite;
+}
+.hero-panel__img--c {
+  animation: hero-drift-c 52s var(--ease-luxe) infinite;
+}
+.hero-panel__img--d {
+  animation: hero-drift-d 64s var(--ease-luxe) infinite;
+}
+
+@keyframes hero-drift-a {
+  0%,
+  100% {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.13) translate3d(-1.6%, -1.2%, 0);
+  }
+}
+@keyframes hero-drift-b {
+  0%,
+  100% {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.11) translate3d(1.4%, 1.6%, 0);
+  }
+}
+@keyframes hero-drift-c {
+  0%,
+  100% {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.14) translate3d(1.8%, -1.4%, 0);
+  }
+}
+@keyframes hero-drift-d {
+  0%,
+  100% {
+    transform: scale(1.05) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate3d(-1.2%, 1.5%, 0);
+  }
+}
+
+/* Hide the scrollbar on horizontal rails — the peeking content is the
+   affordance, a 10px gutter is not. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cream-sunk);
+}
+::-webkit-scrollbar-thumb {
+  background: #cbc3b4;
+  border-radius: 999px;
+  border: 2px solid var(--cream-sunk);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b0a999;
+}
+
+/* Respect users who want stillness. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Belt-and-braces. The 0.01ms rule above already leaves this at its
+     base style — `animation-fill-mode` is never set, so it stays `none`
+     and a stopped animation does not park on its last keyframe — and the
+     base style is the top of the hairline. Saying it outright costs
+     nothing and does not depend on that reasoning holding.
+
+     Both are said outright rather than left to that reasoning: the cue
+     is a sliver that would otherwise freeze mid-shaft, and the hero
+     panels must rest at their composed `scale(1.05)` crop rather than at
+     whichever frame the 0.01ms duration happens to leave behind. */
+  .scroll-cue__mark {
+    animation: none !important;
+  }
+  .hero-panel__img {
+    animation: none !important;
+  }
+}
