@@ -57,6 +57,12 @@
   --plum: #240b14;
   --plum-sunk: #180710;
 
+  /* Espresso — literal near-black ink for display type on the cream
+     ground. `--plum` is too wine-red for editorial headings (it reads
+     warm next to cream); espresso is the true ink the brief asks for.
+     Reserve for display type and pull-quotes; do not retarget `--ink`. */
+  --espresso: #1a1a1a;
+
   /* Type on dark. Pure white rather than cream: on plum the two are
      17.1:1 and 16.4:1, so this is not a contrast decision — white is
      what keeps a menu's 10px small caps crisp where cream goes soft. */
@@ -164,6 +170,7 @@
   --color-peach: var(--peach);
   --color-plum: var(--plum);
   --color-plum-sunk: var(--plum-sunk);
+  --color-espresso: var(--espresso);
   --color-white: var(--white);
   --color-champagne: var(--champagne);
   --color-vermillion: var(--vermillion);
