@@ -21,8 +21,11 @@ import { test, expect, type Page } from "@playwright/test";
  *    (`self-start` on a stretched grid item leaves `sticky` no scroll to
  *    use) and looks like nothing at all in a screenshot;
  *  - the swap creeping back into a user-operated widget — the exact
- *    regression the pivot removed, so `[role="tablist"]`, `role="tab"`
- *    and `<button>` must stay at zero *inside this section*;
+ *    regression the pivot removed, so `[role="tablist"]` and
+ *    `role="tab"` must stay at zero *inside this section*. The
+ *    `button` and `a` zero-assertions were relaxed in the S2 polish
+ *    (2026-09-20) to allow per-room WhatsApp CTAs and clickable
+ *    `01 / 02 / 03` progress labels — see the test below;
  *  - the caption naming a room that is not the one beside it;
  *  - a room's copy being hidden from assistive tech. An earlier pass put
  *    `aria-hidden` on the two inactive stacked copies, which is not a
@@ -93,10 +96,24 @@ test.describe("Atmospheres — the pinned glide", () => {
     await expect(page.locator(`${SECTION} [role="tablist"]`)).toHaveCount(0);
     await expect(section.getByRole("tab")).toHaveCount(0);
 
-    // And it was the only interactive control in the section: an editor
-    // deciding where to sit reads, they do not operate a widget.
-    await expect(page.locator(`${SECTION} button`)).toHaveCount(0);
-    await expect(page.locator(`${SECTION} a`)).toHaveCount(0);
+    // S2 (2026-09-20): per-room WhatsApp CTAs and clickable `01 /
+    // 02 / 03` progress labels are intentional interactive elements
+    // (editorial override per the polish brief). The tablist/tab
+    // absence is still asserted hard — that is the shape of the
+    // original pivot regression and the only failure mode that
+    // justifies the section's no-widget rule.
+    //
+    // At `lg`: 3 progress buttons + 3 per-room CTA anchors = 6
+    // controls inside `#spaces`.
+    // Below `lg`: 0 progress buttons + 3 per-room CTA anchors = 3
+    // controls inside `#spaces`.
+    // The lower bound is therefore `>= 3` at every width — any
+    // future regression that strips all interactive elements will
+    // still fail this assertion.
+    const buttonCount = await page.locator(`${SECTION} button`).count();
+    const anchorCount = await page.locator(`${SECTION} a`).count();
+    expect(buttonCount).toBeGreaterThanOrEqual(0);
+    expect(anchorCount).toBeGreaterThanOrEqual(3);
   });
 
   test("every room is described exactly once, to everyone", async ({

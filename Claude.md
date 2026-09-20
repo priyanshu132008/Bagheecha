@@ -194,19 +194,36 @@ out-of-viewport sample.
 ## 4. Accessibility (non-negotiable)
 - Every CTA is a real `<a>` (anchor, `tel:`, `wa.me`, Maps) — works with the keyboard,
   with middle-click, and before JS loads.
-- **`#atmospheres` has no interactive widget, and must not grow one.** It used to be a
+- **`#spaces` has no `role="tablist"` and must not grow one.** It used to be a
   full-screen `role="tablist"` crossfade that showed one room at a time behind a heavy
   dark veil, which is precisely what the pivot removed. All three rooms are now in one
   scrolling column beside a pinned caption; a guest deciding where to sit reads, they
-  do not operate a widget. `e2e/atmospheres.spec.ts` asserts the absence of
-  `[role="tablist"]`, `role="tab"`, `<button>` and `<a>` in the section, because a
-  switcher creeping back is the exact regression that caused the redesign.
+  do not operate a tablist. `e2e/atmospheres.spec.ts` still asserts the absence of
+  `[role="tablist"]` and `role="tab"` *inside `#spaces`*, because a tablist creeping
+  back is the exact regression that caused the redesign.
 
-  **Every one of those "absence" assertions is scoped to `#atmospheres`, and that
-  scoping is load-bearing.** `#menus` has a `role="tablist"` of its own — the
-  Kitchen/Bar toggle — and it is supposed to. A page-wide `getByRole("tab")` count of
-  zero would pass for the wrong reason today and fail the moment the menu is touched.
-  When adding an absence assertion, anchor it to the section, never to `page`.
+  **Editorial override (S2, 2026-09-20):** `#spaces` carries two intentional groups
+  of interactive elements that are *not* a switcher:
+
+  - Three per-room WhatsApp CTAs — `Reserve the terrace / AC room / classic room` —
+    in the pinned column at `lg`, and one inside each figure's figcaption below `lg`.
+    All point at `WHATSAPP_RESERVATION_HREF` (the pre-filled template already names
+    `Preferred Seating (Terrace/AC/Classic)`, so the `wa.me` URL is byte-identical
+    to the rest of the site).
+  - A clickable `01 / 02 / 03` progress rail in the pinned column at `lg`, three
+    buttons with a 44 px hit area each. Clicking one smooth-scrolls to the
+    corresponding figure (the same `id` the hero's bottom strip deep-links to).
+
+  The e2e spec relaxes the `button` and `a` zero-assertions to `>= 0` (removed) and
+  `>= 3` respectively, and keeps the `tablist`/`tab` zero-assertions hard. The shape
+  of the original pivot regression — a tablist — is still caught; the new anchors
+  and buttons are not.
+
+  **Every "absence" assertion is scoped to `#spaces`, and that scoping is load-
+  bearing.** `#menus` has a `role="tablist"` of its own — the Kitchen/Bar toggle —
+  and it is supposed to. A page-wide `getByRole("tab")` count of zero would pass for
+  the wrong reason today and fail the moment the menu is touched. When adding an
+  absence assertion, anchor it to the section, never to `page`.
 - **A caption that changes on scroll must change *opacity only* — never `aria-hidden`.**
   The pinned atmospheres caption renders all three rooms stacked in one grid cell and
   crossfades between them. An earlier pass marked the two inactive copies `aria-hidden`,

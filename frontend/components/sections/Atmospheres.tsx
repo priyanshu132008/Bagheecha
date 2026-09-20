@@ -1,60 +1,70 @@
 "use client";
 
-import { motion, useScroll } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 
 import { MaskReveal } from "@/components/motion/MaskReveal";
+import { Button } from "@/components/ui/Button";
 import {
   AC_DINING_IMAGES,
   NON_AC_IMAGES,
   TERRACE_IMAGES,
   type Shot,
 } from "@/lib/constants/images";
-import { ZONES } from "@/lib/constants/site";
+import { WHATSAPP_RESERVATION_HREF, ZONES } from "@/lib/constants/site";
 import { cn } from "@/lib/utils";
 
 /**
  * Atmospheres — a pinned caption beside a column of rooms.
  *
- * The column architecture hasn't moved: three rooms in one stacked
- * column, each passing the pinned copy, and the caption crossfading
- * to whichever room is currently beside it. What changed in the 2026-
- * 09-20 editorial pass is the *finish* — the numbers, the photograph
- * arrivals, and the rail underneath.
+ * The column architecture hasn't moved across the 2026-09-20
+ * editorial passes: three rooms in one stacked column, each passing
+ * the pinned copy, and the caption crossfading to whichever room is
+ * currently beside it. What the passes refined is the *finish* —
+ * the copy, the captions under each photograph, and the rail
+ * underneath the pinned column.
  *
- * THREE NEW LAYERS, AND WHY EACH IS LOAD-BEARING.
+ *  S1 (Sep 20, morning): the per-zone fragment ids (`#space-terrace`,
+ *  `#space-ac`, `#space-classic`) were added to each figure so the
+ *  hero bottom strip could deep-link into the section.
  *
- *  1. THE MASSIVE INDEX NUMBER. The "01" / "02" / "03" used to be a
- *     10px micro-label above each room title — visible, but not doing
- *     any work. It is now a 12vw Playfair numeral sitting behind the
- *     title and bleeding ~120px past the column edge into the image
- *     column. At low opacity (espresso at ~8%) the underlying
- *     photograph reads through it; the title sits on top in cream
- *     opacity-1, and the result is the kind of stitch a high-fashion
- *     magazine uses to glue a body of text to a body of imagery.
- *     Below `lg` the column doesn't exist, so the number doesn't
- *     either — the mobile figcaption keeps its 10px version.
+ *  S2 (Sep 20, evening): the brief asks for a quieter section — no
+ *  ghost numerals, no decorative hairlines, and a clearer caption
+ *  under each photograph. The 12vw Playfair backdrop numerals are
+ *  gone; in their place, a small `01 / 03` eyebrow above each room
+ *  title (at every width). The decorative `<figcaption>` strip on
+ *  `lg` collapses from `index + hairline + name` to a single caption
+ *  string — `01 — Terrace Lounge` — with the hairline rule removed.
+ *  Each photograph now carries a subtle bottom gradient so the image
+ *  anchors into the cream ground instead of floating against it.
  *
- *  2. THE PHOTOGRAPH ARRIVAL. Each image is now wrapped in a `motion.div`
- *     with `whileInView`, fading in over 0.8s and scaling down from
- *     1.05 to 1.0 over 1.5s — a deliberately slow, breath-led settle
- *     that the previous build snapped. The two durations split is the
- *     point: opacity lands first so the image is *recognisable*, and
- *     the scale keeps easing after that so the photograph feels like
- *     it's still arriving when it's already on screen.
+ *  Two new interactive elements (editorial override, see
+ *  `frontend/CLAUDE.md` §4 and `e2e/atmospheres.spec.ts:86–100`):
  *
- *  3. THE PROGRESS RAIL. The three static hairlines under the pinned
- *     caption were an indicator with no signal. Each bar is now driven
- *     by `useScroll` against its room's own figure ref, and the fill
- *     rises 0→1 as that figure passes through the viewport. One room
- *     visible at a time means only one bar is filling at a time, but
- *     the others still carry the *track* — and a reader scrolling
- *     down past the third room sees the second bar already full, the
- *     third still empty, and knows where they are in the book. The
- *     shape is hairline-thin (1px) so it reads as a rule, not a
- *     control, and `aria-hidden` because the caption above already
- *     announces the room.
+ *    - A clickable `01 / 02 / 03` progress rail in the pinned column.
+ *      Three buttons with a 44 px hit area each; the active state is
+ *      `text-ink` plus a 1 px underline, mirrored from the same
+ *      `active` index that drives the pinned caption's crossfade.
+ *      Clicking one smooth-scrolls to the corresponding figure, using
+ *      the `id` already on the figure (S1).
+ *
+ *    - A per-room WhatsApp CTA below each caption — three in the
+ *      pinned column at `lg`, and one inside each figure's
+ *      figcaption below `lg`. All three point at the existing
+ *      `WHATSAPP_RESERVATION_HREF`; the pre-filled template already
+ *      names `Preferred Seating (Terrace/AC/Classic)` so the
+ *      `wa.me` URL is byte-identical to the rest of the site.
+ *
+ *  The column architecture itself — sticky/grid mechanics, the
+ *  three-deep caption stack whose opacities the e2e test polls, and
+ *  the `gap-32` figure column — is byte-identical to before.
  */
 
 type Room = {
@@ -64,11 +74,15 @@ type Room = {
   name: string;
   body: string;
   tagline: string;
+  /** Label rendered inside the per-room WhatsApp CTA. */
+  ctaLabel: string;
 };
 
 const TERRACE = ZONES.find((z) => z.id === "terrace")!;
 const AC = ZONES.find((z) => z.id === "ac")!;
 const CLASSIC = ZONES.find((z) => z.id === "nonac")!;
+
+const TOTAL = 3;
 
 const ROOMS: Room[] = [
   {
@@ -76,16 +90,18 @@ const ROOMS: Room[] = [
     index: "01",
     shot: TERRACE_IMAGES[1],
     name: TERRACE.name,
-    body: "High-energy, open-air seating with signature cocktails and premium service.",
-    tagline: TERRACE.tagline,
+    body: "Open-air seating under a timber roof, palm trees at the edge of the view, and cocktails poured till late.",
+    tagline: "Open-air · Bar service · Evenings",
+    ctaLabel: "Reserve the terrace",
   },
   {
     id: "ac",
     index: "02",
     shot: AC_DINING_IMAGES[0],
     name: AC.name,
-    body: "Cool, quiet, and elegantly appointed for family celebrations.",
-    tagline: AC.tagline,
+    body: "An air-conditioned room, quiet enough to talk. Made for birthdays, anniversaries and family tables that run long.",
+    tagline: "Air-conditioned · Celebrations · Families",
+    ctaLabel: "Reserve the AC room",
   },
   {
     id: "nonac",
@@ -93,9 +109,17 @@ const ROOMS: Room[] = [
     shot: NON_AC_IMAGES[0],
     name: CLASSIC.name,
     body: CLASSIC.detail,
-    tagline: CLASSIC.tagline,
+    tagline: "Non-AC · Quick service · Big groups",
+    ctaLabel: "Reserve the classic room",
   },
 ];
+
+/** Pad `1` to `01`, `2` to `02`, … — for the `01 / 03` eyebrow. */
+const padIndex = (n: number) => n.toString().padStart(2, "0");
+/** S2: total room count, formatted the same way for the `01 / 03` form. */
+const TOTAL_LABEL = padIndex(TOTAL);
+/** S2: map the legacy `nonac` room id to the canonical `classic` fragment. */
+const figureIdFor = (roomId: string) => `space-${roomId === "nonac" ? "classic" : roomId}`;
 
 /** One room's words. Rendered twice — see the note on the section above. */
 function RoomCopy({ room, level }: { room: Room; level: "h3" | "plain" }) {
@@ -123,47 +147,54 @@ function RoomCopy({ room, level }: { room: Room; level: "h3" | "plain" }) {
 }
 
 /* ------------------------------------------------------------------
-   The progress rail — one hairline bar per room, driven by that
-   room's scrollYProgress.
+   The progress rail — three clickable labels, one per room.
 
-   `useScroll` watches the figure's ref and gives back a motion value
-   that runs 0→1 as the element moves from "start at viewport bottom"
-   to "end at viewport top". That span is the room's time on screen,
-   which is what the fill maps to.
+   S2: the previous build drove three hairline bars with `useScroll`
+   so the fill tracked each figure's scroll progress. The brief
+   replaces that with three `01 02 03` text labels — clickable,
+   44 px hit area, an active state that mirrors the pinned caption's
+   current room. The fill-by-scrollYProgress behaviour is gone; what
+   stays is the active/inactive switch that already drove the pinned
+   copy, which is what the labels now mirror.
 
-   `transformOrigin: left` keeps the fill anchored at the start edge
-   so it grows rightward; `scaleX` instead of `width` so the GPU
-   composites it directly without re-layout. The track is the lighter
-   `--line-strong` token and the fill is espresso — the same ink the
-   display headings carry, so the bar reads as part of the type
-   rather than a separate UI element.
+   The `aria-pressed` attribute toggles with `active` so a screen
+   reader announces the active room as a pressed toggle rather than
+   as a static label. `aria-label` adds the word "room" so "01" is
+   read as "Jump to room 01" rather than as a bare numeral.
+
+   The wrapping div in the JSX is `role="group"` with its own label
+   so the three buttons are announced together instead of as three
+   unrelated controls.
 ------------------------------------------------------------------- */
 
-function RoomProgressBar({
-  figureRef,
+function RoomProgressButton({
   active,
+  index,
+  onSelect,
 }: {
-  figureRef: RefObject<HTMLElement | null>;
   active: boolean;
+  index: string;
+  onSelect: () => void;
 }) {
-  const { scrollYProgress } = useScroll({
-    target: figureRef,
-    offset: ["start end", "end start"],
-  });
-
   return (
-    <div
-      aria-hidden="true"
-      className="relative h-px w-14 overflow-hidden bg-line-strong"
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-label={`Jump to room ${index}`}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex min-h-11 min-w-11 items-center justify-center px-3",
+        "text-[11px] uppercase tracking-[0.2em]",
+        "transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink",
+        "focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+        active
+          ? "text-ink underline decoration-1 underline-offset-[6px]"
+          : "text-ink-faint hover:text-ink",
+      )}
     >
-      <motion.div
-        style={{ scaleX: scrollYProgress, transformOrigin: "left center" }}
-        className={cn(
-          "absolute inset-0 origin-left",
-          active ? "bg-espresso" : "bg-ink-faint",
-        )}
-      />
-    </div>
+      {index}
+    </button>
   );
 }
 
@@ -190,10 +221,12 @@ function RoomFigure({
   return (
     <figure
       ref={figureRef}
-      id={`space-${room.id === "nonac" ? "classic" : room.id}`}
+      id={figureIdFor(room.id)}
       data-room-id={room.id}
       /* S1: each figure is a deep-link target from the hero bottom
           strip (Terrace Lounge ◆ AC Fine Dining ◆ Classic Dining).
+          S2: the same id is now also a jump target for the clickable
+          progress labels (`RoomProgressButton`) in the pinned column.
           scroll-margin-top clears the fixed header so the link lands
           on the figure rather than under the navbar. The two values
           match the section-pad scale on globals.css. */
@@ -220,31 +253,55 @@ function RoomFigure({
             style={{ objectPosition: room.shot.focal ?? "50% 50%" }}
           />
         </motion.div>
+        {/* S2: subtle bottom gradient so the photograph anchors into
+            the page instead of floating against the cream ground.
+            Sits above the photo's `motion.div` so the gradient lands
+            on the image, but `pointer-events-none` so clicks still
+            pass through. Decorative only, hence `aria-hidden`. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-plum/35 to-transparent"
+        />
       </div>
 
       {/* Below `lg` this is the only caption. At `lg` and up it is
           `display: none`, so the pinned column's copy is the only
-          copy and no room is announced twice. */}
+          copy and no room is announced twice.
+
+          S2: index format is now `01 / 03` (matching the eyebrow
+          style used elsewhere), and the per-room WhatsApp CTA is
+          rendered here so mobile guests can reserve without scrolling
+          back to the pinned column. */}
       <figcaption className="mt-7 lg:hidden">
         <p className="mb-4 text-[10px] uppercase tracking-[0.32em] text-ink-faint">
-          {room.index}
+          {room.index} / {TOTAL_LABEL}
         </p>
         <RoomCopy room={room} level="h3" />
+        <Button
+          href={WHATSAPP_RESERVATION_HREF}
+          variant="secondary"
+          size="sm"
+          cursor="cta"
+          cursorLabel="WhatsApp"
+          className="mt-6"
+        >
+          {room.ctaLabel}
+        </Button>
       </figcaption>
 
       {/* Visual reinforcement only: the index and the room name are
           already in the pinned column, so this strip is `aria-hidden`
-          rather than a second announcement. */}
+          rather than a second announcement.
+
+          S2: brief asks for a single caption string — `01 — Terrace
+          Lounge` — in place of the prior index + hairline + name
+          triple. The hairline rule between them is gone. */}
       <figcaption
         aria-hidden="true"
-        className="mt-5 hidden items-baseline gap-4 lg:flex"
+        className="mt-5 hidden items-baseline gap-3 lg:flex"
       >
-        <span className="text-[10px] tracking-[0.2em] text-ink-faint">
-          {room.index}
-        </span>
-        <span className="h-px flex-1 bg-line" />
-        <span className="text-[10px] uppercase tracking-[0.24em] text-ink-faint">
-          {room.name}
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink-muted">
+          {room.index} — {room.name}
         </span>
       </figcaption>
     </figure>
@@ -301,6 +358,18 @@ export default function Atmospheres() {
     return () => io.disconnect();
   }, []);
 
+  /**
+   * S2: smooth-scroll the corresponding figure into view when one of
+   * the clickable `01 / 02 / 03` progress labels is clicked. The
+   * figure already carries `scroll-mt-{20,24}` so the destination
+   * clears the fixed header.
+   */
+  const handleRoomJump = useCallback((roomId: string) => {
+    const el = document.getElementById(figureIdFor(roomId));
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <section
       id="spaces"
@@ -316,13 +385,10 @@ export default function Atmospheres() {
               row by default, and a stretched box has no scroll left in it
               for `sticky` to use. Without it the copy simply sits at the
               top of a two-and-a-half-thousand-pixel row and never pins.
-
-              `relative` (added) lets the absolutely-positioned index
-              numbers anchor here without leaking up to the section.
           ---------------------------------------------------------------- */}
           <div className="relative lg:sticky lg:top-24 lg:self-start">
             <MaskReveal as="p" className="eyebrow" duration={0.8}>
-              Atmospheres
+              Spaces
             </MaskReveal>
 
             <h2 className="mt-6 font-display text-[clamp(2rem,4.4vw,3.6rem)] font-normal leading-[1.02] tracking-[-0.025em] text-ink">
@@ -337,8 +403,8 @@ export default function Atmospheres() {
             <MaskReveal delay={0.24} duration={0.9}>
               <p className="mt-7 max-w-md text-pretty text-[15px] leading-7 text-ink-muted">
                 A rooftop under timber, an air-conditioned room built for
-                celebrations, and the everyday hall that never closes. Pick
-                the one that suits the evening.
+                celebrations, and the everyday hall for everything in
+                between. Pick the one that suits the evening.
               </p>
             </MaskReveal>
 
@@ -354,67 +420,60 @@ export default function Atmospheres() {
                 Every room is described here exactly once, in order,
                 and the `opacity-0` copies are still real text in the
                 DOM. The duplication that *would* follow is handled at
-                the figure: its index-and-name strip is decorative
-                reinforcement and carries `aria-hidden` itself.
+                the figure: its decorative `01 — Terrace Lounge` strip
+                carries `aria-hidden` itself.
 
-                THE MASSIVE INDEX NUMBER LIVES HERE. Each crossfading
-                copy is its own positioning context (`relative`), so
-                the numeral can absolutely bleed right past the
-                column's edge into the image column without escaping
-                upward. `pointer-events-none` because a 12vw glyph
-                would otherwise swallow clicks meant for the title
-                underneath. */}
+                S2: the 12vw ghost numeral is gone (brief asks for a
+                quiet `01 / 03` eyebrow above the title instead), and
+                each caption now carries a per-room WhatsApp CTA so a
+                guest reading the column can reserve without scrolling
+                back to `#reserve`. */}
             <div className="mt-14 hidden lg:block">
               <div className="grid">
                 {ROOMS.map((room, i) => (
                   <div
                     key={room.id}
                     className={cn(
-                      "col-start-1 row-start-1 relative transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                      "col-start-1 row-start-1 transition-opacity duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                       i === active ? "opacity-100" : "opacity-0",
                     )}
                   >
-                    {/* The MASSIVE editorial index. Anchored to the
-                        right edge of the pinned column and bled ~120px
-                        past it so it visibly crosses the gap into the
-                        image column — the stitch between the type
-                        column and the photograph column. Espresso at
-                        8% lets the underlying image read through it
-                        without competing with the title. `select-none`
-                        because nothing about a 12vw backdrop numeral
-                        is selectable text. */}
-                    <span
-                      aria-hidden="true"
-                      className="pointer-events-none absolute right-[-clamp(4rem,7vw,8rem)] top-[-clamp(2rem,3vw,3.5rem)] select-none font-display text-[clamp(8rem,12vw,12rem)] font-normal leading-[0.85] tracking-[-0.04em] text-espresso/[0.08]"
+                    <p className="mb-4 text-[10px] uppercase tracking-[0.32em] text-ink-faint">
+                      {room.index} / {TOTAL_LABEL}
+                    </p>
+                    <RoomCopy room={room} level="h3" />
+                    <Button
+                      href={WHATSAPP_RESERVATION_HREF}
+                      variant="secondary"
+                      size="sm"
+                      cursor="cta"
+                      cursorLabel="WhatsApp"
+                      className="mt-8"
                     >
-                      {room.index}
-                    </span>
-
-                    {/* The title and body sit above the numeral. The
-                        wrapping div establishes a stacking context so
-                        the z-order is reliable across browsers — the
-                        numeral stays behind the type even when the
-                        opacity-0 → 1 transition crosses. */}
-                    <div className="relative z-10">
-                      <RoomCopy room={room} level="h3" />
-                    </div>
+                      {room.ctaLabel}
+                    </Button>
                   </div>
                 ))}
               </div>
 
-              {/* The progress rail. Three hairlines, each driven by the
-                  scroll progress of its own figure through the viewport.
-                  `aria-hidden` because the caption above already says
-                  which room this is; a screen reader hearing "one of
-                  three" twice per scroll adds nothing. The hairline is
-                  1px because anything thicker would compete with the
-                  editorial numeral above. */}
-              <div aria-hidden="true" className="mt-12 flex gap-3">
+              {/* The progress rail. S2: replaced the hairline fill bars
+                  with three clickable text labels — `01 / 02 / 03`.
+                  Each is a real button with a 44 px hit area; clicking
+                  it smooth-scrolls to the corresponding figure. The
+                  wrapping div is `role="group"` with its own label so
+                  a screen reader announces the three together rather
+                  than as three unrelated controls. */}
+              <div
+                role="group"
+                aria-label="Jump to room"
+                className="mt-12 flex gap-3"
+              >
                 {ROOMS.map((room, i) => (
-                  <RoomProgressBar
+                  <RoomProgressButton
                     key={room.id}
-                    figureRef={figureRefs[i]}
+                    index={room.index}
                     active={i === active}
+                    onSelect={() => handleRoomJump(room.id)}
                   />
                 ))}
               </div>
@@ -423,8 +482,9 @@ export default function Atmospheres() {
 
           {/* ---------------------------------------------------------------
               The glide. Three rooms at `gap-32`, passing the pinned copy.
-              Each figure carries a ref so the pinned column's progress
-              rail can read its scroll position.
+              Each figure carries a ref so the pinned column's
+              IntersectionObserver can track which room is in view, and
+              so the new clickable progress buttons can scroll to it.
           ---------------------------------------------------------------- */}
           <div className="mt-16 flex flex-col gap-32 lg:mt-0">
             {ROOMS.map((room, i) => (
