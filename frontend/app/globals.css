@@ -204,9 +204,16 @@
 
 html {
   scroll-behavior: smooth;
-  /* Clears the fixed header when an in-page anchor is jumped to. */
+  /* Clears the fixed header when an in-page anchor is jumped to.
+     Defaults to the desktop header height; the mobile override below
+     matches the navbar's h-16 on phones. */
   scroll-padding-top: 5rem;
   background: var(--cream);
+}
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 4rem;
+  }
 }
 
 body {
@@ -273,6 +280,41 @@ body {
   color: var(--cream);
 }
 
+/* ------------------------------------------------------------------
+   Keyboard focus — POLISH BRIEF (2026-09-20, G7, a11y).
+
+   The default browser outline is too loud against this page's hairlines
+   and would visually compete with the active-link underline. The rule
+   below draws a tone-aware ring that is one notch quieter than the
+   active state but unmistakably there for a keyboard user.
+
+   Tailwind v4's preflight removes outlines; without this rule no
+   interactive element on the page shows a focus indicator at all.
+   The ring is set to 2px so it reads at 1x and at high-DPI alike, and
+   offset by 2px so it never touches the glyph or the hairline.
+
+   The ring colour reads `--ink`, the same token the active-link
+   underline reads, so the two states share their colour but not their
+   geometry — a sighted keyboard user can distinguish "focused" from
+   "active" by shape alone.
+
+   `outline` is preferred over `box-shadow` so the ring is not clipped
+   by `overflow: hidden` on ancestor elements (the menu tablist, the
+   atmosphere pinned column).
+------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+/* The `<Button>` component has its own ring (set on the wrapper) and
+   also a native outline on focus. Suppress the duplicate outline on
+   the button so the ring is the only focus indicator. */
+button:focus-visible,
+a:focus-visible {
+  outline-offset: 4px;
+}
+
 /* Hide native cursor only where the custom cursor is active */
 @media (pointer: fine) {
   html[data-cursor="tracing"],
@@ -319,6 +361,18 @@ body {
      < 768 ->  72px (mobile override below) */
 .section-pad {
   padding-block: clamp(96px, 12vw, 160px);
+  /* POLISH BRIEF (2026-09-20, G7). When an in-page anchor is jumped to
+     (e.g. clicking `#menus` in the nav), the section's top edge sits
+     *below* the viewport's scroll-padding band instead of under it.
+     `scroll-padding-top` on `html` already handles the viewport edge;
+     `scroll-margin-top` on the section is the per-element guarantee
+     that survives a wrapper element with its own scroll context. */
+  scroll-margin-top: 5rem;
+}
+@media (max-width: 767px) {
+  .section-pad {
+    scroll-margin-top: 4rem;
+  }
 }
 
 /* Below `md` the page lives in the thumb's reach, and the same 96-160

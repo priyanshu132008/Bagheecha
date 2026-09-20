@@ -1,4 +1,24 @@
 /**
+ * DEPRECATED (2026-09-20, Turn 4). This file is a parallel configuration
+ * created in an earlier polish pass but never migrated to. The site
+ * still reads everything that matters from `lib/constants/site.ts` —
+ * WhatsApp templates, contact numbers, directions, nav links, the
+ * LOCATION object, the three seating zones. Until that migration
+ * happens, treat `lib/constants/site.ts` as the single source of truth
+ * and this file as a planning document.
+ *
+ * The migration has been deferred to a future turn so that this one
+ * stayed scoped to G7 (scroll-spy, scroll-margin, a11y) and G8 (SEO,
+ * metadata, JSON-LD). Deleting or de-duplicating the two files in the
+ * same turn as the section-id migration would have inflated the diff
+ * past the size of a safe single-commit change.
+ *
+ * The NAV_LINKS list below is *correct* (Spaces / Menus / Order / Visit
+ * per the polish brief), but it is unused — the live nav reads its
+ * `NAV_LINKS` from `lib/constants/site.ts`.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ *
  * Single source of truth for every fact a guest can act on or read.
  *
  * WHY THIS FILE EXISTS. The previous version lived at

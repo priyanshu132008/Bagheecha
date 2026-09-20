@@ -212,7 +212,7 @@ export default async function Home() {
             the rail and the content in columns 2–11 — the type can
             breathe without breaking the page edge.
         --------------------------------------------------------------- */}
-        <WideSection id="location" eyebrow="Find Us">
+        <WideSection id="visit" eyebrow="Find Us">
           <h2 className={H2_MASSIVE}>
             <MaskReveal className="text-balance">
               {LOCATION.name}, {LOCATION.locality}.
@@ -296,7 +296,7 @@ export default async function Home() {
 
         {/* --------------------------------------------------------------
             Reserve — Phase 3 lands the booking flow here. Same wider
-            rail as `#location` so the closing pair read as one book.
+            rail as `#visit` so the closing pair read as one book.
         --------------------------------------------------------------- */}
         <WideSection id="reserve" eyebrow="Reservations">
           <h2 className={H2_MASSIVE}>

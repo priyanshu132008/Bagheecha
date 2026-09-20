@@ -59,25 +59,77 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Scroll spy — the active section is marked in the nav. The band is
-     pulled in from both edges so a section counts as "current" only
-     while it crosses the middle of the viewport, which keeps exactly one
-     link lit instead of two fighting at a boundary. */
+  /* Scroll spy — the active section is marked in the nav. POLISH BRIEF
+     (2026-09-20, G7): the previous IntersectionObserver approach drove
+     `setActive` for *every* entry the observer reported, so when the
+     band's edge crossed two sections at once — exactly the moment
+     between Sections A and B — both calls fired and React's last-write
+     won, which depended on iteration order rather than on what the
+     reader was looking at. Symptom: the Menus link stayed lit while the
+     reader was actually in Reviews.
+
+     The fix is to pick a single winner each frame: the section whose
+     top is closest to the header without having scrolled above it. If
+     the reader is past every section, no link is lit; if they are
+     above the first one, the first link is lit. A single rAF-throttled
+     scroll handler is enough for four sections, and it survives the
+     "two are crossing the band at once" boundary case by construction
+     rather than by which loop the browser happened to fire first.
+
+     `headerOffset` matches the navbar's height at each viewport. The
+     brief's anchor-clearance is `scroll-padding-top: 5rem` on desktop
+     and `4rem` on mobile; we use the same numbers here so the "section
+     the reader is in" judgement line up with the "where the anchor
+     lands" judgement. */
   useEffect(() => {
     const els = NAV_LINKS.map((l) => document.getElementById(l.href.slice(1)))
       .filter((el): el is HTMLElement => el !== null);
     if (!els.length) return;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(`#${entry.target.id}`);
+    let rafId = 0;
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      const headerOffset =
+        window.innerWidth >= 768 ? 80 /* md+ : h-20 */ : 64 /* mobile : h-16 */;
+      let bestId: string | null = null;
+      let bestTop = -Infinity; // Most positive top that's still above header.
+      let firstId: string | null = null;
+
+      for (const el of els) {
+        if (firstId === null) firstId = `#${el.id}`;
+        const top = el.getBoundingClientRect().top;
+        // Candidate: top is at or above the header line (so the reader
+        // has scrolled into or past this section's top) AND its top is
+        // the largest such value — i.e. the bottom-most section that has
+        // already crossed the line.
+        if (top <= headerOffset && top > bestTop) {
+          bestTop = top;
+          bestId = `#${el.id}`;
         }
-      },
-      { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+      }
+
+      // Above the first section: light the first link so the nav isn't
+      // empty when the page first opens.
+      if (bestId === null) bestId = firstId;
+      setActive(bestId);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      rafId = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, []);
 
   /* Freeze the page behind the open drawer, and let Escape close it. */

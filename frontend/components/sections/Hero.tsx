@@ -210,8 +210,8 @@ export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[
 
             <div className="col-span-12 md:col-span-4 md:justify-self-end">
               <a
-                href="#atmospheres"
-                aria-label="Scroll to the atmospheres section"
+                href="#spaces"
+                aria-label="Scroll to the spaces section"
                 className="hidden items-center gap-3 text-ink transition-opacity duration-500 hover:opacity-70 md:inline-flex"
               >
                 <span className="text-[9px] uppercase tracking-[0.32em]">

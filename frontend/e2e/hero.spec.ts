@@ -14,11 +14,12 @@ import { test, expect, type Page } from "@playwright/test";
  *
  *  - **No WebGL canvas, and no `<canvas>` at all.** The Obsidian overhaul
  *    deleted the smoke canvas; the editorial overhaul then replaced the
- *    hero photograph with an ambient light field and the field with four
- *    drifting food panels. This assertion has now outlived three
- *    backdrops and is the guard on the fourth. A canvas quietly
- *    reappearing behind the hero is a performance regression nobody
- *    notices until a phone gets hot.
+ *    hero photograph with an ambient light field and the field with a
+ *    four-column mosaic of food panels that swap one column at a time
+ *    every second. This assertion has now outlived three backdrops and
+ *    is the guard on the fourth. A canvas quietly reappearing behind
+ *    the hero is a performance regression nobody notices until a phone
+ *    gets hot.
  *  - **No veil over the frame.** Obsidian ran a 50% black plate, which
  *    left the photograph mathematically present and visually absent. The
  *    hero carries a vignette again — it has to, because the ground is a
@@ -421,7 +422,7 @@ test.describe("Hero — first impression", () => {
       "#top h1",
       "#top p",
       "#top ul li span:last-child",
-      "#top a[href='#atmospheres'] span",
+      "#top a[href='#spaces'] span",
     ];
 
     // Four points in the cycle. The four panels drift at 46/58/52/64s,
@@ -608,7 +609,16 @@ test.describe("Hero — first impression", () => {
     // not a stock image. The page had previously opened on the back bar,
     // which is a handsome photograph of a wall — the guest's first
     // impression was the decor rather than the product.
-    const panels = page.locator("section#top img");
+    //
+    // Scoped to the four base panels by class, because the swap is
+    // rendered as an overlay pattern — during a crossfade each column's
+    // mid-swap image is a *fifth* `<img>` mounted absolutely on top of
+    // the base, and a `section#top img` count is then five or six
+    // depending on how many columns happen to be mid-fade at the same
+    // moment. `.hero-panel__img` is the four base `<img>` elements only:
+    // their `src` is what gets the prominent `object-cover` and the
+    // drift keyframes, so they are the four the back-of-house shot.
+    const panels = page.locator("section#top img.hero-panel__img");
     await expect(panels).toHaveCount(4);
 
     // Decorative here, described below. As a backdrop the panels carry
@@ -634,14 +644,16 @@ test.describe("Hero — first impression", () => {
     }
 
     // Four distinct sources — a copy-paste that pointed every panel at
-    // one dish would still count four images.
+    // one dish would still count four images. Scoped to base panels
+    // for the same reason as the count above; a fade-in-progress
+    // overlay would otherwise add a fifth distinct source mid-swap.
     const srcs = await panels.evaluateAll((els) =>
       els.map((el) => (el as HTMLImageElement).currentSrc),
     );
     expect(new Set(srcs).size).toBe(4);
 
     // And they are laid out as four upright columns, which is the whole
-    // reason this is a collage rather than a 2x2: three of the four
+    // reason this is a mosaic rather than a 2x2: three of the four
     // sources are portrait, so a 2x2 crops each one landscape and beheads
     // the subject.
     const boxes = await panels.evaluateAll((els) =>
@@ -807,12 +819,12 @@ test.describe("Hero — first impression", () => {
     expect(size).toBeGreaterThanOrEqual(96);
   });
 
-  test("scroll cue leads to the atmospheres section", async ({
+  test("scroll cue leads to the spaces section", async ({
     page,
     isMobile,
   }) => {
     await page.goto("/");
-    const cue = page.getByRole("link", { name: /scroll to the atmospheres/i });
+    const cue = page.getByRole("link", { name: /scroll to the spaces/i });
 
     // The cue is the desktop complement of the mobile action bar: on a
     // phone the bar occupies the bottom strip and the cue would sit
@@ -820,14 +832,14 @@ test.describe("Hero — first impression", () => {
     test.skip(!!isMobile, "cue is md:inline-flex, the complement of the md:hidden bar");
     await expect(cue).toBeVisible();
     await cue.click();
-    await expect(page.locator("#atmospheres")).toBeInViewport();
+    await expect(page.locator("#spaces")).toBeInViewport();
   });
 
   test("the cue and the action bar never both claim the bottom strip", async ({
     page,
   }) => {
     await page.goto("/");
-    const cue = page.getByRole("link", { name: /scroll to the atmospheres/i });
+    const cue = page.getByRole("link", { name: /scroll to the spaces/i });
     const bar = page.getByRole("navigation", { name: "Quick actions" });
     // Exactly one of the two is on screen at any width.
     const cueShown = await cue.isVisible();
@@ -961,7 +973,7 @@ test.describe("Header", () => {
   test("marks the current section in the nav", async ({ page, isMobile }) => {
     test.skip(!!isMobile, "desktop rail only");
     await page.goto("/");
-    await page.locator("#atmospheres").scrollIntoViewIfNeeded();
+    await page.locator("#spaces").scrollIntoViewIfNeeded();
 
     await expect
       .poll(() =>
@@ -986,7 +998,7 @@ test.describe("Header", () => {
           .getByRole("navigation", { name: "Primary" })
           .getByRole("link", { name: "Atmospheres" });
     await link.click();
-    await expect(page.locator("#atmospheres")).toBeInViewport();
+    await expect(page.locator("#spaces")).toBeInViewport();
   });
 
   test("mobile drawer opens, and closes from its own toggle", async ({
@@ -1137,51 +1149,65 @@ test.describe("Page health", () => {
     // start on the same axis, or the page reads as a pile of unrelated
     // blocks.
     //
-    // SIX LABELS, NOT FIVE. One per section — hero, atmospheres, menus,
-    // location, reserve — plus the "From the kitchen" kicker that heads
-    // the four-dish band inside `#menus`. That sixth one is deliberate
-    // and it is the interesting case: it is an eyebrow *inside* a
-    // section rather than at its head, so if the rail only held for
-    // section openers it would be the one that drifts. It measures 64px
-    // like the rest — the same edge, not merely a legal one.
+    // SEVEN LABELS, NOT SIX. One per section opener — hero, spaces,
+    // menus, reviews, location, reserve — plus the "From the kitchen"
+    // kicker that heads the four-dish band inside `#menus`. That seventh
+    // is deliberate: it is an eyebrow *inside* a section rather than at
+    // its head, so if the rail only held for section openers it would
+    // be the one that drifts. It measures 64px like the rest — the
+    // same edge, not merely a legal one.
+    //
+    // Why the rail-filter: `#order` carries its own `.eyebrow` per
+    // half of the 50/50 split ("Order via" / "Direct") which sit in
+    // their own grid cells, not on the rail. Counting them would make
+    // the assertion meaningless; filtering for the rail column counts
+    // only the section openers and the kitchen kicker.
     const edges = await page.evaluate(() =>
-      Array.from(document.querySelectorAll("section .eyebrow")).map((el) =>
-        Math.round(el.getBoundingClientRect().x),
-      ),
+      Array.from(document.querySelectorAll("section .eyebrow"))
+        .map((el) => Math.round(el.getBoundingClientRect().x))
+        .filter((x) => x < 100),
     );
-    expect(edges).toHaveLength(6);
+    expect(edges).toHaveLength(7);
     expect(new Set(edges).size).toBe(1);
   });
 
-  test("headings sit on the content rail, with atmospheres on the label rail", async ({
+  test("headings sit on the content rail, with spaces on the label rail", async ({
     page,
     isMobile,
   }) => {
     test.skip(!!isMobile, "the rail collapses to a single column below lg");
     await page.goto("/");
 
-    const { rail, content, atmosphere } = await page.evaluate(() => {
+    const { rail, menus, visit, reserve, spaces } = await page.evaluate(() => {
       const x = (sel: string) =>
         Math.round(document.querySelector(sel)!.getBoundingClientRect().x);
       return {
         rail: x("section .eyebrow"),
-        content: ["#menus h2", "#location h2", "#reserve h2"].map(x),
-        atmosphere: x("#atmospheres h2"),
+        menus: x("#menus h2"),
+        visit: x("#visit h2"),
+        reserve: x("#reserve h2"),
+        spaces: x("#spaces h2"),
       };
     });
 
-    // The three ordinary sections share one content edge, inset from the
-    // label rail — column 5 against column 1.
-    expect(new Set(content).size).toBe(1);
-    expect(content[0]).toBeGreaterThan(rail);
+    // `#menus` opens on the standard section rail (column 5). `#visit`
+    // and `#reserve` use the wider `WideSection` rail (column 2) so the
+    // closing chapters can carry a 5xl heading without breaking the page
+    // edge. The two opening patterns are deliberate; the assertion is
+    // that each heading is inset from the label rail and that the
+    // visit/reserve pair share their own edge.
+    expect(menus).toBeGreaterThan(rail);
+    expect(visit).toBeGreaterThan(rail);
+    expect(reserve).toBeGreaterThan(rail);
+    expect(visit).toBe(reserve);
 
-    // `#atmospheres` is the one deliberate exception. It is an
+    // `#spaces` is the one deliberate exception. It is an
     // asymmetric editorial spread rather than a rail-plus-content
     // section, so its heading sits *on* the label rail. That is a
     // considered shape and the reason this is asserted exactly rather
     // than tolerated as drift: if it moves, it should be because someone
     // meant it.
-    expect(atmosphere).toBe(rail);
+    expect(spaces).toBe(rail);
   });
 
   test("every masked line actually rises into view", async ({ page }) => {
@@ -1197,7 +1223,7 @@ test.describe("Page health", () => {
     //
     // That is not hypothetical; it shipped. `whileInView` was on the
     // inner span, and every masked element that starts fully clipped —
-    // the atmospheres body copy, the menus lede, the location rows —
+    // the spaces body copy, the menus lede, the visit rows —
     // stayed at `translateY(110%)` on desktop and on a phone alike. It
     // survived because `toContainText` matches hidden text, so the copy
     // assertions all passed while the section rendered as two bare

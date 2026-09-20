@@ -33,10 +33,10 @@ import { test, expect, type Page } from "@playwright/test";
  * THE SECTION-SCOPING IS NOT COSMETIC. `#menus` legitimately has a
  * `role="tablist"` toggle, so a page-wide `getByRole("tab")` count of
  * zero would now pass for the wrong reason at best and fail at worst.
- * Every "absence" assertion below is anchored to `#atmospheres`.
+ * Every "absence" assertion below is anchored to `#spaces`.
  */
 
-const SECTION = "#atmospheres";
+const SECTION = "#spaces";
 
 /** The pinned column: the first cell of the section's two-column grid. */
 const PINNED = `${SECTION} .container-x > div > :first-child`;
@@ -52,7 +52,7 @@ function figures(page: Page) {
 /** Page-relative geometry for every room figure. */
 async function figureBoxes(page: Page) {
   return page.evaluate(() =>
-    Array.from(document.querySelectorAll("#atmospheres figure")).map((el) => {
+    Array.from(document.querySelectorAll("#spaces figure")).map((el) => {
       const r = el.getBoundingClientRect();
       return {
         x: Math.round(r.x),
@@ -67,7 +67,7 @@ async function figureBoxes(page: Page) {
 /** Opacity of the three stacked caption copies, in room order. */
 async function captionOpacities(page: Page) {
   return page.evaluate(() => {
-    const pin = document.querySelector("#atmospheres .container-x > div > div");
+    const pin = document.querySelector("#spaces .container-x > div > div");
     const stack = pin?.querySelector(".grid");
     if (!stack) return [];
     return Array.from(stack.children).map((el) =>
@@ -195,7 +195,7 @@ test.describe("Atmospheres — the pinned glide", () => {
 
     const base = await page.evaluate(
       () =>
-        document.querySelector("#atmospheres")!.getBoundingClientRect().top +
+        document.querySelector("#spaces")!.getBoundingClientRect().top +
         window.scrollY,
     );
 
@@ -247,8 +247,8 @@ test.describe("Atmospheres — the pinned glide", () => {
         return img.currentSrc || img.src;
       }),
     );
-    expect(srcs[0]).toMatch(/terrace-under-roof/);
-    expect(srcs[1]).toMatch(/ac-fine-dining/);
+    expect(srcs[0]).toMatch(/atmos-rooftop/);
+    expect(srcs[1]).toMatch(/atmos-ac/);
     expect(srcs[2]).toMatch(/classic-dining-nonac/);
   });
 
@@ -308,7 +308,7 @@ test.describe("Atmospheres — the pinned glide", () => {
     // the *stack* that goes, not the column around it: the eyebrow, the
     // heading and the lede are the same at every width.
     const tracking = await page.evaluate(() => {
-      const pin = document.querySelector("#atmospheres .container-x > div > div")!;
+      const pin = document.querySelector("#spaces .container-x > div > div")!;
       const stack = pin.querySelector(".grid")!;
       return Array.from(stack.children).filter(
         (el) => (el as HTMLElement).getBoundingClientRect().height > 0,
