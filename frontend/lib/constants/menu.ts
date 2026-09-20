@@ -49,6 +49,18 @@ export type Dish = {
   note?: string;
   /** Printed "APS" on the card — priced by size, so we ask. */
   onRequest?: boolean;
+  /**
+   * Turn 7: auto-classified by name in the `isVegFor()` call below.
+   *
+   *   `true`  → the row renders a green-tinted marker (`VegMarker`)
+   *   `false` → the row renders a brown-tinted marker
+   *   omitted → the row carries no marker at all (groups where the
+   *            heuristic can't decide, e.g. `bread`, `Bagheecha's Special
+   *            Soup`, `Butter Milk`). The marker is honest about its own
+   *            limits, and "I don't know" is the safest answer when the
+   *            printed card doesn't disambiguate.
+   */
+  isVeg?: boolean;
 };
 
 export type DishGroup = {
@@ -724,4 +736,89 @@ export const MENU_LINE_COUNT = ALL_DISHES.length + ALL_POURS.length;
 /** `[210, 310]` reads as a range; a single number stands alone. */
 export function formatPrice(price: Price): string {
   return Array.isArray(price) ? `${price[0]} / ${price[1]}` : String(price);
+}
+
+/* ------------------------------------------------------------------
+   Turn 7 — Veg / Non-Veg auto-classification
+
+   The Supabase CMS does not yet carry a per-dish `isVeg` column, so
+   the marker is populated from a name-keyword heuristic at module load.
+   When the CMS lands its own field, `isVegFor` becomes the fallback for
+   rows the admin hasn't reviewed yet.
+
+   The keyword list is **conservative on the non-veg side** — a Hindu or
+   Jain guest should never see a meat dish flagged as vegetarian, so any
+   non-veg keyword match wins, even when the name also contains a veg
+   keyword ("Chicken Cheese Naan" would still be non-veg). An unmatched
+   name leaves `isVeg` undefined and the row omits the marker entirely;
+   for groups where the card never disambiguates (`bread`, `soups`,
+   `desserts`), that is the only honest answer.
+------------------------------------------------------------------- */
+
+const NON_VEG_KEYWORDS = [
+  "chicken",
+  "mutton",
+  "lamb",
+  "fish",
+  "prawn",
+  "shrimp",
+  "crab",
+  "egg",
+  // The printed card spells "Omlet" without the second `t`; both spellings
+  // are kept so a future re-transcription of the card cannot silently
+  // flip the marker.
+  "omlet",
+  "omlete",
+  "omlette",
+  "omelette",
+];
+
+const VEG_KEYWORDS = [
+  "paneer",
+  // The Chinese chapter misspells paneer as "Panner" on row one — both
+  // spellings match so the marker follows whichever the card carries.
+  "panner",
+  "palak",
+  "mushroom",
+  "corn",
+  "dal",
+  "cheese",
+  "aloo",
+  "gobi",
+  "cauliflower",
+  "baingan",
+  "bhindi",
+  "mixed veg",
+  // `veg` matches as a whole word on most cards ("Veg Platter", "Veg
+  // Manchurian") but also catches "Vegetarian" inside a long name.
+  "veg",
+];
+
+/**
+ * Auto-classify a dish by its lowercased name.
+ *
+ * Returns `true` for vegetarian, `false` for non-vegetarian, `undefined`
+ * when the heuristic cannot decide. The row omits the marker in the
+ * undefined case — see the type comment on `Dish.isVeg`.
+ */
+export function isVegFor(name: string): boolean | undefined {
+  const lower = name.toLowerCase();
+  // Non-veg wins on conflict: a guest must never see a meat dish
+  // flagged as veg. The list is a small word allowlist, not a regex.
+  if (NON_VEG_KEYWORDS.some((kw) => lower.includes(kw))) return false;
+  if (VEG_KEYWORDS.some((kw) => lower.includes(kw))) return true;
+  return undefined;
+}
+
+/**
+ * Mutate every food dish in place with its classification. Runs once at
+ * module load; `FOOD` is a server-side constant, so the cost is paid per
+ * process, not per request.
+ */
+for (const cat of FOOD) {
+  for (const group of cat.groups) {
+    for (const dish of group.items) {
+      dish.isVeg = isVegFor(dish.name);
+    }
+  }
 }

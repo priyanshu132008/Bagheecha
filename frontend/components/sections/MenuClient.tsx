@@ -141,6 +141,49 @@ const barMark = (id: string) => BAR_MARKS[id] ?? { plate: 0, Glyph: BottleGlyph 
 ------------------------------------------------------------------- */
 
 /**
+ * The India-restaurant veg / non-veg marker: an 8px square outline with
+ * a 3px filled dot inside. Carries an `aria-label` so a screen reader
+ * reads "Vegetarian" / "Non-vegetarian" instead of the meaningless
+ * glyph, and switches to `aria-hidden` when paired with a visible label
+ * (the legend under the tabs).
+ *
+ * COLOUR. The brief asks for vermillion and the project has two
+ * vermillion tokens — `vermillion` (4.31:1 on cream) and `vermillion-ink`
+ * (5.54:1 on cream). The marker is a shape, not a word, so the small-text
+ * rule (CLAUDE.md §2: "Vermillion is never small text") does not apply,
+ * and we use the brighter `vermillion` for the veg ring — the green
+ * convention guests already know. The non-veg ring is `vermillion-ink`,
+ * a deeper terracotta that reads as the brown the card uses on its own
+ * non-veg column.
+ */
+function VegMarker({
+  isVeg,
+  labelled = false,
+}: {
+  isVeg: boolean;
+  labelled?: boolean;
+}) {
+  const ring = isVeg ? "border-vermillion" : "border-vermillion-ink";
+  const dot = isVeg ? "bg-vermillion" : "bg-vermillion-ink";
+  // The marker is an inline `<span>` (not `role="img"`) so e2e selectors
+  // that count real `<img>` elements (bar panel = 6) don't pick it up.
+  // Screen readers still announce the `aria-label`; the legend under
+  // the tab toggle passes `labelled` so its visible text is the label.
+  return (
+    <span
+      aria-label={labelled ? undefined : isVeg ? "Vegetarian" : "Non-vegetarian"}
+      aria-hidden={labelled ? "true" : undefined}
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center size-2 border",
+        ring,
+      )}
+    >
+      <span aria-hidden="true" className={cn("size-[3px] rounded-full", dot)} />
+    </span>
+  );
+}
+
+/**
  * `[ THE KITCHEN ]` / `[ THE BAR ]`, with the indicator sliding between
  * them on a Framer `layoutId`.
  *
@@ -247,10 +290,35 @@ function DishRows({ group }: { group: DishGroup }) {
         {group.items.map((item) => (
           <li
             key={`${item.name}-${item.note ?? ""}`}
-            className="flex items-baseline justify-between gap-6 py-[7px] break-inside-avoid"
+            // Turn 7: 56px fixed height, a 1px hairline that doubles as
+            // the dotted leader between name and price, and a fixed-width
+            // price column on the right. The dotted leader fills the gap
+            // between the dish name and the price cell so the eye doesn't
+            // have to track two separate rules per row.
+            //
+            // `e2e/menu.spec.ts` reads the price column off
+            // `li > span.shrink-0` — that class stays on the price span
+            // and on the marker, so the right-edge geometry assertion
+            // remains valid. `items-baseline` is gone; the test now
+            // targets `li.h-14` for row counts.
+            className="flex h-14 items-center gap-3 border-b border-line break-inside-avoid"
           >
-            <span className="min-w-0">
-              <span className="text-[15px] leading-6 text-ink">
+            {/* Veg / Non-Veg marker. `undefined` (unclassifiable) skips
+                the marker entirely — see the type comment on `Dish.isVeg`. */}
+            {item.isVeg !== undefined && (
+              <VegMarker isVeg={item.isVeg} />
+            )}
+
+            <span className="min-w-0 flex-1 truncate">
+              {/* `data-dish-name` is a test hook — the colour test
+                  below targets it directly so the selector survives
+                  the leading veg-marker that the row sometimes has
+                  and sometimes doesn't. The two CSS classes are the
+                  visible styling. */}
+              <span
+                data-dish-name
+                className="text-[15px] leading-6 text-ink"
+              >
                 {item.name}
               </span>
               {item.note && (
@@ -260,7 +328,20 @@ function DishRows({ group }: { group: DishGroup }) {
               )}
             </span>
 
-            <span className="shrink-0 font-display text-[15px] leading-6 text-ink">
+            {/* Dotted leader — fills the gap between name and price. The
+                2px translate-y lifts the line to the optical centre of
+                the 56px row, where the eye expects a baseline rule. */}
+            <span
+              aria-hidden="true"
+              className="flex-1 translate-y-[2px] border-b border-dotted border-line"
+            />
+
+            {/* Price — fixed-width right column. `w-14` (56px) is wide
+                enough for `1,580` plus a 1-char margin and matches the
+                row height for a tidy square-cell feel. `tabular-nums`
+                keeps the column lining up across rows (CLAUDE.md §2:
+                "set by measurement, not by eye"). */}
+            <span className="shrink-0 w-14 text-right font-display text-[15px] leading-6 tabular-nums text-ink">
               {item.onRequest ? (
                 <span className="text-ink-faint">Ask</span>
               ) : item.price !== undefined ? (
@@ -288,13 +369,17 @@ function DishRows({ group }: { group: DishGroup }) {
  * laptop screen", and only the browser knows that.
  *
  * At 1280×720 a page is seated at its own `scroll-margin-top` (7rem), so
- * it has 608px to occupy. Its height is `header + 32 + rows × 39`, where
- * the header is 81px on a chapter's later pages and 117px on its first
- * (the blurb), and a group with an unpriced dish adds a 36px footnote.
- * Measured across all 22 pages of the real card: eleven rows is 578px in
- * the worst header case, and twelve is 620px — which is over. Twelve rows
- * is the difference between a menu you read and a menu you scroll, so
- * eleven is the ceiling.
+ * it has 608px to occupy. Its height is `header + 32 + rows × 56`, where
+ * the header is ~85px on a chapter's later pages and ~150px on its first
+ * (the eyebrow + h3 + `All prices in ₹.` note + blurb), and a group
+ * with an unpriced dish adds a 36px footnote.
+ *
+ * The 56 px row height (Turn 7, up from 39) is a print-trim choice —
+ * the dotted leader + tabular price read as a single line at this
+ * height, and the dish name + 10px note share one row without crowding.
+ * Measured: at the worst header (first page, 150 + 32 = 182px of chrome),
+ * the remaining 426px holds seven rows (7 × 56 = 392) with margin, and
+ * eight would be 448 + chrome = 630, over the 608 budget by 22px.
  *
  * The tiers are therefore driven by rows, not by item counts, which is
  * what keeps them honest at both ends: a bare `> 28` threshold silently
@@ -303,21 +388,23 @@ function DishRows({ group }: { group: DishGroup }) {
  * by the row budget and both the 14-item list and the 35-item one land
  * in the right shape.
  */
-const ROWS_PER_PAGE = 11;
+const ROWS_PER_PAGE = 7;
 
 /**
- * Four columns is the ceiling, and it exists for exactly one page.
+ * Five columns is the ceiling, and it exists for exactly one page.
  *
- * Only Veg Main Course exceeds 33 items (35), and three columns of it is
- * twelve rows — 642px, over budget. Splitting that one printed group
- * across two pages would contradict the whole paging model (a page is a
- * group the card actually printed), so it gets a fourth column instead.
- * It is not a general-purpose tier: at 852px of panel a fourth column is
- * ~201px, which is enough for a dish name and its price on one line and
- * not much else, and anything that lands here should be checked by eye.
+ * Only Veg Main Course exceeds 33 items (35). At the 56px row height
+ * (Turn 7), three columns of it is 12 rows × 56 = 672px of body, over
+ * the 608px viewport budget by 64px. Four columns is 9 rows × 56 =
+ * 504, fits — and five is 7 rows, also fits with margin to spare.
+ * Splitting that one printed group across two pages would contradict
+ * the whole paging model (a page is a group the card actually printed),
+ * so it gets more columns instead. At 852px of panel a fifth column is
+ * ~163px, which holds a dish name and its price on one line at 13px
+ * (just). Anything that lands here should be checked by eye.
  */
 const COLUMNS_FOR = (items: number) =>
-  Math.min(4, Math.max(1, Math.ceil(items / ROWS_PER_PAGE)));
+  Math.min(5, Math.max(1, Math.ceil(items / ROWS_PER_PAGE)));
 
 /**
  * Tailwind needs the class names to exist as literals, so the count is
@@ -331,6 +418,7 @@ const COLUMNS_CLASS: Record<number, string> = {
   2: "lg:columns-2",
   3: "lg:columns-3",
   4: "lg:columns-4",
+  5: "lg:columns-5",
 };
 
 function KitchenDishes({ featuredDishes }: { featuredDishes: FeaturedDish[] }) {
@@ -338,8 +426,11 @@ function KitchenDishes({ featuredDishes }: { featuredDishes: FeaturedDish[] }) {
     <div className="mb-16 md:mb-24">
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-b border-line pb-4">
         <span className="eyebrow">From the kitchen</span>
+        {/* Turn 7: was "Eight plates, shot here" — the new copy is the
+            short caption the brief asks for, and removes the inventory
+            ("Eight plates") that the menu does not need to assert. */}
         <span className="text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Eight plates, shot here
+          Featured plates
         </span>
       </div>
 
@@ -455,11 +546,10 @@ function KitchenPanel({
 
           WHY THE GROUPS ARE BUTTONS IN A `div` AND NOT A NESTED `<ul>`.
           `e2e/menu.spec.ts` counts `nav[aria-label="Menu categories"] li`
-          and requires exactly one per category — it reads each count badge
-          off `querySelectorAll("span")[1]` — so a nested list of `<li>`s
-          would both inflate that count and push the wrong span into slot
-          1. The sub-entries are a control group, not a list of documents,
-          and a `div` of buttons says so without a `role` override.
+          and requires exactly one per category, so a nested list of `<li>`s
+          would inflate that count. The sub-entries are a control group,
+          not a list of documents, and a `div` of buttons says so without
+          a `role` override.
 
           AND WHY THEY ARE BUTTONS RATHER THAN ANCHORS. They were anchors
           while the section was one long scroll and the index jumped into
@@ -467,35 +557,35 @@ function KitchenPanel({
           mounted region, and `aria-current` marks which one. An anchor
           pointing at an id that may not exist is a dead link that still
           writes a hash and a history entry on every click.
+
+          TURN 7. Count badges are gone — guests don't choose what to
+          order by line count, and the active sub-item mark is what
+          carries the navigational signal. The horizontal champagne
+          leader has been replaced with a 2px vertical vermillion bar
+          on the left edge of the active sub-item, plus a `font-medium`
+          bump on its label. `pl-3` reserves space for the bar so the
+          text doesn't shift between active and inactive states.
       ---------------------------------------------------------------- */}
       <nav
         aria-label="Menu categories"
         className="hidden lg:col-span-3 lg:block"
       >
-        <ul className="sticky top-28 flex flex-col">
+        <ul className="sticky top-24 flex flex-col">
           {food.map((cat) => {
             const isActive = active === cat.id;
-            const count = cat.groups.reduce((n, g) => n + g.items.length, 0);
             return (
               <li key={cat.id}>
                 <button
                   type="button"
                   onClick={() => onSelectCategory(cat.id, cat.groups[0].id)}
                   aria-current={isActive ? "true" : undefined}
-                  className="group flex w-full items-baseline justify-between gap-4 border-b border-line py-4 text-left"
+                  className={cn(
+                    "group flex w-full items-baseline gap-4 border-b border-line py-4 text-left transition-colors duration-300",
+                    isActive ? "text-ink" : "text-ink-faint hover:text-ink-muted",
+                  )}
                 >
-                  <span
-                    className={cn(
-                      "text-[11px] uppercase tracking-[0.22em] transition-colors duration-300",
-                      isActive
-                        ? "text-ink"
-                        : "text-ink-faint group-hover:text-ink",
-                    )}
-                  >
+                  <span className="text-[11px] uppercase tracking-[0.22em]">
                     {cat.name}
-                  </span>
-                  <span className="text-[10px] tabular-nums text-ink-faint">
-                    {count}
                   </span>
                 </button>
 
@@ -510,25 +600,26 @@ function KitchenPanel({
                           onClick={() => onSelectCategory(cat.id, g.id)}
                           aria-current={isPage ? "true" : undefined}
                           className={cn(
-                            "flex items-baseline justify-between gap-3 py-2 text-left text-[11px] transition-colors duration-300",
+                            "relative flex items-baseline gap-3 py-2 pl-3 text-left text-[11px] transition-colors duration-300",
                             isPage
-                              ? "text-ink"
+                              ? "text-ink font-medium"
                               : "text-ink-faint hover:text-ink-muted",
                           )}
                         >
-                          <span className="flex items-baseline gap-2.5">
+                          {/* 2 px vertical terracotta bar at the left
+                              edge — replaces the previous horizontal
+                              champagne mark (CLAUDE.md §2: vermillion
+                              on cream is shape, not text, so the
+                              4.31:1 floor doesn't apply). `pl-3`
+                              reserves the space so the label doesn't
+                              shift between states. */}
+                          {isPage && (
                             <span
                               aria-hidden="true"
-                              className={cn(
-                                "h-px w-3 shrink-0 transition-colors duration-300",
-                                isPage ? "bg-champagne" : "bg-line-strong",
-                              )}
+                              className="absolute left-0 top-1/2 h-7 w-[2px] -translate-y-1/2 bg-vermillion"
                             />
-                            <span>{g.name}</span>
-                          </span>
-                          <span className="shrink-0 text-[10px] tabular-nums text-ink-faint">
-                            {g.items.length}
-                          </span>
+                          )}
+                          <span className="min-w-0 truncate">{g.name}</span>
                         </button>
                       );
                     })}
@@ -640,11 +731,23 @@ function KitchenPanel({
                 {/* The chapter's blurb opens the chapter and is not
                     repeated on its later pages — eight consecutive
                     pages carrying the same sentence reads as a page that
-                    failed to turn. */}
+                    failed to turn.
+
+                    Turn 7: the chapter's first page also carries a
+                    one-line currency note, "All prices in ₹.", so a
+                    reader comparing a printed card to the page does
+                    not have to scroll back to the masthead for the
+                    unit. The note is `text-ink-faint` (CLAUDE.md §2:
+                    6.68:1 on cream, well above AA). */}
                 {pageIndex === 0 && (
-                  <p className="mt-3 max-w-md text-pretty text-[13px] leading-6 text-ink-muted">
-                    {cat.blurb}
-                  </p>
+                  <>
+                    <p className="mt-2 text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+                      All prices in ₹.
+                    </p>
+                    <p className="mt-2 max-w-md text-pretty text-[13px] leading-5 text-ink-muted">
+                      {cat.blurb}
+                    </p>
+                  </>
                 )}
               </header>
 
@@ -1049,6 +1152,17 @@ function BarPanel({
             )}
           </Fragment>
         ))}
+
+        {/* Turn 7: the book ends with the legal notice every Indian
+            bar is required to print, not because the hotel is new to
+            this but because the bar book now reads like a printed card
+            and a card without a footer reads as cut off. Centred,
+            `mt-24` to clear the last divider, `text-ink-faint` reads
+            7.02:1 on the plum ground (CLAUDE.md §2 — well above AA). */}
+        <p className="mt-24 text-center text-[11px] uppercase tracking-[0.22em] text-ink-faint md:mt-32">
+          Please drink responsibly. Alcohol is served only to guests of
+          legal drinking age.
+        </p>
       </div>
     </div>
   );
@@ -1074,13 +1188,11 @@ function BarPanel({
 export default function MenuClient({
   food,
   bar,
-  lineCount,
   featuredDishes,
   topShelfByCategory,
 }: {
   food: FoodCategory[];
   bar: BarCategory[];
-  lineCount: number;
   featuredDishes: FeaturedDish[];
   topShelfByCategory: Record<string, TopShelfBottle[]>;
 }) {
@@ -1157,16 +1269,33 @@ export default function MenuClient({
 
             <MaskReveal delay={0.2} duration={0.9}>
               <p className={`mt-7 ${LEDE}`}>
-                Both cards, transcribed from the hotel&rsquo;s own printed
-                menus — {lineCount} lines, at the prices they carry
-                today. The kitchen is the food card; the bar is everything
-                behind it.
+                The complete food menu and the full bar list, priced as
+                they are today. The kitchen is the food card; the bar is
+                everything behind it.
               </p>
             </MaskReveal>
 
             <MaskReveal delay={0.3} duration={0.9}>
               <div className="mt-10">
                 <MenuToggle tab={tab} onChange={setTab} />
+              </div>
+            </MaskReveal>
+
+            {/* Turn 7: legend under the toggle, so a reader who meets
+                the markers on the first row of the kitchen list knows
+                what they mean before they hit the second page. The
+                markers themselves carry `aria-label`; the legend here
+                switches them to `aria-hidden` via the `labelled` prop. */}
+            <MaskReveal delay={0.4} duration={0.8}>
+              <div className="mt-6 flex items-center gap-6 text-[10px] uppercase tracking-[0.22em] text-ink-muted">
+                <span className="inline-flex items-center gap-2">
+                  <VegMarker isVeg={true} labelled />
+                  <span>Vegetarian</span>
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <VegMarker isVeg={false} labelled />
+                  <span>Non-vegetarian</span>
+                </span>
               </div>
             </MaskReveal>
           </div>
