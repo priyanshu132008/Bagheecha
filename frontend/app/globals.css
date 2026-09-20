@@ -213,9 +213,59 @@ body {
   background: var(--cream);
   color: var(--plum);
   font-family: var(--font-inter), "Helvetica Neue", sans-serif;
+  font-size: 18px;
+  line-height: 1.7;
+  /* POLISH BRIEF (2026-09-20, G5): prices, phone numbers and any other
+     digits render with lining tabular figures. "80" stops looking like
+     "8o" in a phone number, and ₹210 / ₹310 line up column-wise without
+     the column-by-column baseline wander that proportional figures give.
+     Components that explicitly opt out of these features (display type
+     in the hero wordmark, the kitchen plate row's price block) will
+     carry their own `font-feature-settings` override where it matters. */
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
+}
+
+/* ------------------------------------------------------------------
+   Default body-copy block (G5 of the polish brief).
+
+   18-19 px / 1.7 / max-width 58ch. Below `md` we drop to 17 px so a
+   long sentence never tips into a horizontal scrollbar on a phone.
+
+   The `text-pretty` is the standard text-wrap value that wraps the
+   last line short where possible; `.text-balance` is the same
+   facility for headings. Both are recognised by Chromium and WebKit,
+   ignored elsewhere, and the worst case is to wrap normally. */
+.prose {
+  font-size: 18px;
+  line-height: 1.7;
+  max-width: 58ch;
+  text-wrap: pretty;
+}
+@media (min-width: 1024px) {
+  .prose {
+    font-size: 19px;
+  }
+}
+@media (max-width: 767px) {
+  .prose {
+    font-size: 17px;
+    line-height: 1.65;
+  }
+}
+
+/* The polish brief's sentence-case rule (G5): taglines, sidebar sub-
+   items and counts render in sentence case rather than as uppercase
+   tracked micro-labels. Eyebrows, nav links and button labels are the
+   only places where uppercase tracking is allowed — that contract is
+   enforced at the call site, but this utility exists so a section's
+   polish pass can drop in `.sentence` once and forget about it. */
+.sentence {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 ::selection {
@@ -255,10 +305,52 @@ body {
 }
 
 /* Section rhythm — deliberately huge. The whitespace is the luxury; the
-   content is the punctuation. */
+   content is the punctuation.
+
+   POLISH BRIEF (2026-09-20, G2): one scale across the page. Desktop
+   clamps between 96 and 160 px; below `md` it pins to a compact 72 px
+   so a phone never opens with the same vertical air as a desktop and
+   reads as designed rather than squeezed.
+
+   The clamp resolves per viewport:
+     1440  -> 12vw = 172.8px -> clamped to 160px
+     1024  -> 12vw = 122.9px (within range, kept)
+     768   -> 12vw =  92.2px -> clamped to  96px (floor)
+     < 768 ->  72px (mobile override below) */
 .section-pad {
-  padding-block: clamp(6rem, 11vw, 11rem);
+  padding-block: clamp(96px, 12vw, 160px);
 }
+
+/* Below `md` the page lives in the thumb's reach, and the same 96-160
+   air at desktop becomes dead weight. Pin to 72 px top + 72 px bottom. */
+@media (max-width: 767px) {
+  .section-pad {
+    padding-block: 72px;
+  }
+}
+
+/* ------------------------------------------------------------------
+   The vertical rhythm between the elements inside a section. The
+   polish brief formalises this (G2, G3):
+
+     eyebrow -> heading   20 px
+     heading  -> body     24 px
+     body     -> CTA      40 px
+
+   These are exposed as utility classes so each section's polish pass
+   can migrate its own JSX to the shared scale without forcing a
+   bulk find-and-replace across the page.
+------------------------------------------------------------------ */
+.rhythm-eyebrow-h2 {
+  margin-top: 20px;
+}
+.rhythm-h2-body {
+  margin-top: 24px;
+}
+.rhythm-body-cta {
+  margin-top: 40px;
+}
+
 
 /* Editorial kicker. All-caps, extreme tracking, micro size — the
    counterweight to the oversized Playfair it sits above. Tone-aware:
@@ -289,6 +381,48 @@ body {
 .bleed {
   width: 100vw;
   margin-inline: calc(50% - 50vw);
+}
+
+/* ------------------------------------------------------------------
+   The page rail (G3 of the polish brief).
+
+   One 12-column grid. Eyebrow in columns 1-3. Content starts at
+   column 4 for every section that isn't using its own split layout
+   (Spaces/Atmospheres uses its own two-column structure and is
+   exempt). Below `lg` both columns stack full-width as before.
+
+   Why utilities rather than a wrapping component: each section owns
+   its own JSX for tone-aware data fetching and CMS hydration. A
+   helper component would either shell every section (large blast
+   radius) or live alongside as dead code. CSS utilities keep the
+   rule visible at the call site and trivial to grep later. */
+.section-rail {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 2rem;
+}
+@media (min-width: 1024px) {
+  .section-rail {
+    column-gap: 1.5rem;
+  }
+}
+.section-rail__eyebrow {
+  grid-column: span 12 / span 12;
+}
+.section-rail__content {
+  grid-column: span 12 / span 12;
+}
+@media (min-width: 1024px) {
+  .section-rail__eyebrow {
+    grid-column: span 3 / span 3;
+  }
+  .section-rail__content {
+    grid-column: span 9 / span 9;
+    /* Content begins at column 4 — the rail's first column ends at 3,
+       so the right-hand block lives in cols 4-12. */
+    grid-column-start: 4;
+  }
 }
 
 /* ------------------------------------------------------------------
