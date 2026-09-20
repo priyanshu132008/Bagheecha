@@ -52,6 +52,15 @@
      feel rather than a boundary you see. */
   --peach: #f4c5b9;
 
+  /* Sand — a warmer beige for the second-card ground in #order. Sits
+     between cream-sunk and peach in tone: more neutral than peach (no
+     pink shift), a touch warmer than cream-sunk. Used only by the
+     Swiggy card; not a page ground, not a section ground. Plum type on
+     sand measures ~14:1 — well above AA — and the absence of a pink
+     shift keeps the swiggy card from reading as a tonal partner to the
+     plum direct card on the other side of the grid. */
+  --sand: #ede6da;
+
   /* Dark — deep plum / aubergine. THE dark ground: the hero, and every
      chapter that happens after dark. */
   --plum: #240b14;

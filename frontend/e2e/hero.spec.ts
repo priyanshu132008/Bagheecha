@@ -1165,10 +1165,10 @@ test.describe("Page health", () => {
     // same edge, not merely a legal one.
     //
     // Why the rail-filter: `#order` carries its own `.eyebrow` per
-    // half of the 50/50 split ("Order via" / "Direct") which sit in
-    // their own grid cells, not on the rail. Counting them would make
-    // the assertion meaningless; filtering for the rail column counts
-    // only the section openers and the kitchen kicker.
+    // card ("Direct from the kitchen" / "On the app") which sit
+    // inside the cards at column 5+, not on the rail. Counting them
+    // would make the assertion meaningless; filtering for the rail
+    // column counts only the section openers and the kitchen kicker.
     const edges = await page.evaluate(() =>
       Array.from(document.querySelectorAll("section .eyebrow"))
         .map((el) => Math.round(el.getBoundingClientRect().x))

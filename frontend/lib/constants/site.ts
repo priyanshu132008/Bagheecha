@@ -80,6 +80,19 @@ export const WHATSAPP_RESERVATION_HREF = toWhatsApp(
 /** The exact order href, ready to drop into `href=`. */
 export const WHATSAPP_ORDER_HREF = toWhatsApp(WHATSAPP_NUMBER, ORDER_MESSAGE);
 
+/**
+ * Turn 9: thin wrapper for callers that want to compose a fresh message
+ * at the call site rather than reuse the structured `ORDER_MESSAGE`
+ * template. The Order section's "Order on WhatsApp" CTA uses this with
+ * a short, single-sentence opener — guests landing on the page are not
+ * yet committed to a structured order form, and a friendly opener
+ * converts better than a six-field template. The shape mirrors the
+ * `waLink` helper in the deprecated `lib/config/site.ts` (Turn 4
+ * duplicate) so the call sites read the same.
+ */
+export const waLink = (message: string): string =>
+  toWhatsApp(WHATSAPP_NUMBER, message);
+
 export const CONTACT = {
   whatsapp: {
     label: "WhatsApp",
