@@ -4,9 +4,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { memo, useEffect, useRef, useState } from "react";
 
-import { ActionButton } from "@/components/ui/ActionButton";
+import { Button } from "@/components/ui/Button";
 import { MaskRise } from "@/components/motion/MaskReveal";
-import { WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
 import type { FeaturedDish } from "@/lib/menu/queries";
 
 /**
@@ -58,15 +57,32 @@ import type { FeaturedDish } from "@/lib/menu/queries";
  * the restaurant. The `sr-only` "Hotel" in front of it is, so the
  * accessible name is the real one.
  *
- * THE CTA IS A GHOST. Both actions are `outline`, so the first
- * viewport contains no solid button at all. With a wordmark this
- * size, a filled block beside it is two things shouting.
+ * THE CTA IS BELOW THE SUBTEXT (S1, 2026-09-20). The previous build
+ * parked the two CTAs on the right of the page (a 12-col grid split),
+ * which made the hero read as a billboard — two shouts competing at
+ * the bottom of the screen. The polish pass moves them under the
+ * subtext, left-aligned, with a 32 px gap; the wordmark keeps the
+ * page grounded and the CTAs own the band beneath it. Both CTAs are
+ * in-page anchors: `Reserve a table` lands the reader in `#reserve`
+ * where the WhatsApp and Call buttons sit, and `View the menu` lands
+ * them in `#menus` at the start of the chapter.
+ *
+ * THE BOTTOM STRIP NAMES THE THREE ROOMS (S1, 2026-09-20). A hairline-
+ * divided row under the CTA band lists the three seating zones as
+ * anchor links, each pointing at its own figure inside `#spaces` —
+ * `#space-terrace`, `#space-ac`, `#space-classic`. The diamonds
+ * between them are typographic (the unicode `◆`, U+25C6) rather than
+ * the rotated-square CSS shape the previous build used; same look,
+ * less DOM.
  *
  * THE OVERLAY. A single deep-plum ramp covers the whole grid (top
  * transparent, mid-plum at 40%, full plum at the foot) so the type
  * below clears AA on every frame, on every strip. The drift happens
  * behind the ramp; the ramp does not move. Measured against the
- * composited result, not the token, by `e2e/hero.spec.ts`.
+ * composited result, not the token, by `e2e/hero.spec.ts`. The S1
+ * pass strengthens the top scrim and adds a left-to-right text-block
+ * scrim so the subtext and bottom strip clear AA over the photograph
+ * without the ramp bleeding into the centre of the frame.
  *
  * LCP. Strip one carries `priority` and is preloaded; the other
  * three are `loading="eager"`. They all live in the first viewport,
@@ -76,7 +92,16 @@ import type { FeaturedDish } from "@/lib/menu/queries";
  * build time.
  */
 
-const ZONE_LEGEND = ["Terrace Lounge", "AC Fine Dining", "Classic Non-AC"];
+/* The bottom-strip zone legend. Each label is an anchor link to its
+   own figure inside `#spaces`; the three `id`s are declared on the
+   `<figure>` elements in `Atmospheres.tsx` so the hero's links land
+   directly on the slide. The unicode `◆` (U+25C6) is the diamond
+   separator between them. */
+const ZONE_LEGEND: ReadonlyArray<{ label: string; href: string }> = [
+  { label: "Terrace Lounge", href: "#space-terrace" },
+  { label: "AC Fine Dining", href: "#space-ac" },
+  { label: "Classic Dining", href: "#space-classic" },
+] as const;
 
 /** How often the mosaic picks one column to start a crossfade. */
 const SWAP_MS = 1500;
@@ -139,7 +164,7 @@ export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[
       ------------------------------------------------------------------ */}
       <div className="container-x relative z-20 mt-auto pb-24 pt-6 md:pb-14 md:pt-8">
         <MaskRise delay={0.1} duration={0.8} className="eyebrow">
-          Hotel Bagheecha &middot; Virar
+          Restaurant &amp; Bar &middot; Virar
         </MaskRise>
 
         <h1 className="mt-4 font-display text-[clamp(3.2rem,10.5vw,9rem)] font-normal leading-[0.85] tracking-tighter text-ink">
@@ -152,58 +177,65 @@ export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[
           </MaskRise>
         </h1>
 
-        <div className="mt-7 grid grid-cols-12 items-end gap-x-6 gap-y-7">
-          <div className="col-span-12 lg:col-span-5">
-            <MaskRise delay={0.46} duration={0.9}>
-              <p className="max-w-md text-pretty text-[15px] leading-7 text-ink-muted md:text-base">
-                The city&rsquo;s rooftop lounge, its family dining rooms, and a
-                back bar that runs late &mdash; under one roof in Virar.
-              </p>
-            </MaskRise>
-          </div>
+        {/* The subtext + CTAs sit under the wordmark, left-aligned,
+            with a 32 px gap. Previously this was a 12-col split with
+            the CTAs parked on the right at lg — that read as a
+            billboard. S1 unifies them into one column so the
+            wordmark owns the upper band and the CTAs own the lower
+            one. */}
+        <div className="mt-8 max-w-md md:mt-10">
+          <MaskRise delay={0.46} duration={0.9}>
+            <p className="text-pretty text-[15px] leading-7 text-ink-muted md:text-base">
+              A rooftop terrace, two dining rooms and a bar that keeps
+              late hours — all under one roof in Virar.
+            </p>
+          </MaskRise>
 
-          <div className="col-span-12 lg:col-span-6 lg:col-start-7 lg:justify-self-end">
-            <MaskRise delay={0.56} duration={0.9}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:justify-end">
-                <ActionButton
-                  href={WHATSAPP_RESERVATION_HREF}
-                  variant="secondary"
-                  size="lg"
-                  external
-                  className="w-full justify-center sm:w-auto"
-                >
-                  Reserve a Place
-                </ActionButton>
-                <ActionButton
-                  href="#menus"
-                  variant="secondary"
-                  size="lg"
-                  cursor="hover"
-                  className="w-full justify-center sm:w-auto"
-                >
-                  Explore the Menu
-                </ActionButton>
-              </div>
-            </MaskRise>
-          </div>
+          <MaskRise delay={0.56} duration={0.9}>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <Button
+                href="#reserve"
+                variant="secondary"
+                size="lg"
+                cursor="cta"
+                className="w-full justify-center sm:w-auto"
+              >
+                Reserve a table
+              </Button>
+              <Button
+                href="#menus"
+                variant="secondary"
+                size="lg"
+                cursor="hover"
+                className="w-full justify-center sm:w-auto"
+              >
+                View the menu
+              </Button>
+            </div>
+          </MaskRise>
         </div>
 
-        <div className="mt-8 md:mt-12">
+        <div className="mt-10 md:mt-14">
           <div aria-hidden="true" className="rule-hairline" />
 
           <div className="mt-4 grid grid-cols-12 items-center gap-x-6 gap-y-4">
-            <ul className="col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 md:col-span-8">
+            <ul className="col-span-12 flex flex-wrap items-center gap-x-4 gap-y-2 md:col-span-8">
               {ZONE_LEGEND.map((zone, i) => (
-                <li key={zone} className="flex items-center gap-5">
+                <li key={zone.href} className="flex items-center gap-4">
                   {i > 0 && (
                     <span
                       aria-hidden="true"
-                      className="hidden size-1 rotate-45 bg-vermillion/70 sm:block"
-                    />
+                      className="hidden text-vermillion/70 sm:inline-block"
+                    >
+                      &#x25C6;
+                    </span>
                   )}
-                  <span className="text-[10px] uppercase tracking-[0.24em] text-ink-muted">
-                    {zone}
-                  </span>
+                  <a
+                    href={zone.href}
+                    className="text-[10px] uppercase tracking-[0.24em] text-ink-muted transition-colors duration-300 hover:text-ink"
+                  >
+                    {zone.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -217,7 +249,11 @@ export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[
                 <span className="text-[9px] uppercase tracking-[0.32em]">
                   Scroll
                 </span>
-                <span className="relative h-10 w-px overflow-hidden bg-line-strong">
+                {/* S1: bump the shaft from --line-strong (cream @ 34%)
+                    to cream @ 50% so the cue reads against the
+                    photograph in the same band, not as a half-faded
+                    hairline next to the zone legend. */}
+                <span className="relative h-10 w-px overflow-hidden bg-cream/50">
                   <span className="scroll-cue__mark absolute inset-x-0 top-0 h-4 bg-champagne" />
                 </span>
               </a>

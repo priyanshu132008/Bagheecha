@@ -190,7 +190,14 @@ function RoomFigure({
   return (
     <figure
       ref={figureRef}
+      id={`space-${room.id === "nonac" ? "classic" : room.id}`}
       data-room-id={room.id}
+      /* S1: each figure is a deep-link target from the hero bottom
+          strip (Terrace Lounge ◆ AC Fine Dining ◆ Classic Dining).
+          scroll-margin-top clears the fixed header so the link lands
+          on the figure rather than under the navbar. The two values
+          match the section-pad scale on globals.css. */
+      className="scroll-mt-20 md:scroll-mt-24"
     >
       <div className="relative aspect-[4/5] overflow-hidden">
         <motion.div

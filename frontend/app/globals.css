@@ -538,23 +538,40 @@ a:focus-visible {
    type, so it is written out here where it can be read and re-measured
    rather than left as an arbitrary-value class at the call site.
 
-   WHY THERE IS NO LONGER A SIDE LAYER. The previous composition bought
-   its last contrast on the left, because the type was anchored bottom-
-   left and the photograph breathed at the right. The supporting row now
-   runs subtitle-left / actions-right under a full-width wordmark, so the
-   words cross the whole frame and a lateral ramp would darken a side
-   that has nothing on it while leaving the other side short. A single
-   vertical ramp is both simpler and more honest about where the type is.
+   THREE LAYERS, ONE STACK (S1, 2026-09-20). The previous build ran a
+   vertical ramp and a short top scrim. The S1 polish pass re-adds a
+   left-to-right ramp because the copy block (eyebrow → wordmark →
+   subtext → CTAs → zone legend) is now exclusively left-loaded — the
+   photograph breathes on the right and the type crowds the left, and
+   a vertical ramp alone can't lift contrast on the left without
+   darkening the centre where the photograph is meant to be seen.
+   The horizontal ramp darkens only the leftmost 55% and fades to
+   transparent by 75%, so the photograph still carries the right side
+   of the frame and the type sits on a measured band.
+
+   WHY A SIDE LAYER WORKS NOW WHERE IT DIDN'T BEFORE. The earlier
+   objection ("the words cross the whole frame") was true when the
+   supporting row was a 12-col split with the CTAs parked at
+   col-start-7. S1 moves the CTAs under the subtext, so every glyph
+   on the page lives inside the leftmost ~55% of the viewport — and
+   a side ramp sized to that band actually protects what it is
+   protecting.
 
    AND THE SECOND LAYER IS THE NAVIGATION. The header is fixed, so at
    scroll zero it floats over whatever the frame happens to be, and the
    transparent-at-rest header has no ground of its own. The top ramp is
-   what it sits on. It is short — nothing but the header lives up there —
-   and it is why the very first pixel is not bare photograph.
+   what it sits on. The S1 pass strengthens the top scrim from
+   `rgba(24,7,16,0.5)` at 0% to `rgba(20,8,12,0.65)` — the brief's
+   plum-sunk value — and extends the fall-off from 17% to 22% so the
+   page chrome above the wordmark is unambiguously on a measured
+   ground, not floating over a bright photograph.
 ------------------------------------------------------------------- */
 
 .hero-vignette {
   background-image:
+    /* Bottom-to-top vertical ramp: holds the type block. Unchanged
+        from the previous build because the vertical stops were
+        already measured. */
     linear-gradient(
       to top,
       rgba(36, 11, 20, 0.97) 0%,
@@ -567,11 +584,28 @@ a:focus-visible {
       rgba(24, 7, 16, 0.08) 90%,
       rgba(24, 7, 16, 0) 100%
     ),
+    /* Top scrim (top-to-bottom): strengthens to the brief's
+        plum-sunk value at the very top. Wider fall-off so the
+        header chrome and the eyebrow are both inside the measured
+        band. */
     linear-gradient(
       to bottom,
-      rgba(24, 7, 16, 0.5) 0%,
-      rgba(24, 7, 16, 0.26) 9%,
-      rgba(24, 7, 16, 0) 17%
+      rgba(20, 8, 12, 0.65) 0%,
+      rgba(20, 8, 12, 0.4) 7%,
+      rgba(20, 8, 12, 0.18) 14%,
+      rgba(20, 8, 12, 0) 22%
+    ),
+    /* Left-to-right text-block ramp (left-to-right): darkens the
+        leftmost 55% of the frame to lift contrast for the wordmark,
+        subtext, and CTAs, then fades to transparent by 75% so the
+        photograph still carries the right side of the frame. */
+    linear-gradient(
+      to right,
+      rgba(20, 8, 12, 0.55) 0%,
+      rgba(20, 8, 12, 0.42) 20%,
+      rgba(20, 8, 12, 0.22) 40%,
+      rgba(20, 8, 12, 0.06) 55%,
+      rgba(20, 8, 12, 0) 75%
     );
 }
 

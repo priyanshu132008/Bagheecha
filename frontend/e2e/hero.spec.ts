@@ -405,8 +405,8 @@ test.describe("Hero — first impression", () => {
     await expect(h1).toHaveAccessibleName(/Hotel\s+bagheecha/i);
     await expect(h1).not.toHaveAccessibleName(/asterisk|\*/i);
 
-    await expect(page.getByRole("link", { name: "Reserve a Place" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Explore the Menu" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Reserve a table" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "View the menu" })).toBeVisible();
   });
 
   test("the backdrop never intrudes on the type", async ({ page }) => {
@@ -417,11 +417,18 @@ test.describe("Hero — first impression", () => {
     // the page, and it sits at the very foot of the frame where the ramp
     // is strongest. If the ramp is ever softened it will show up here
     // last.
+    //
+    // S1 (2026-09-20): the bottom strip's three zone labels are now
+    // `<a>` tags rather than `<span>`s, so the selector for the third
+    // token is `#top ul li a` (the anchor carries the visible text).
+    // The previous `span:last-child` selector returned zero matches
+    // after the S1 restructure and would have failed on the count
+    // assertion at the bottom of the loop.
     const SELECTORS = [
       "#top .eyebrow",
       "#top h1",
       "#top p",
-      "#top ul li span:last-child",
+      "#top ul li a",
       "#top a[href='#spaces'] span",
     ];
 
@@ -735,12 +742,12 @@ test.describe("Hero — first impression", () => {
 
   test("nothing overlays the CTAs", async ({ page }) => {
     await page.goto("/");
-    const cta = page.getByRole("link", { name: "Reserve a Place" }).first();
+    const cta = page.getByRole("link", { name: "Reserve a table" }).first();
     await expect(cta).toBeVisible();
     // The vignette is a full-viewport layer between the photographs and
     // every control on the page; a click landing on the CTA proves no
     // invisible layer intercepts. `pointer-events-none` on that layer is
-    // one word, and losing it is how "Reserve a Place" stops working for
+    // one word, and losing it is how "Reserve a table" stops working for
     // reasons no screenshot shows.
     await cta.click({ trial: true });
   });
@@ -749,7 +756,7 @@ test.describe("Hero — first impression", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toContainText("bagheecha");
-    await expect(page.getByRole("link", { name: "Reserve a Place" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Reserve a table" })).toBeVisible();
 
     // The panels must stop *and* stop in the right place, and the right
     // place is the hard part. The blanket reduced-motion rule sets
@@ -1150,7 +1157,7 @@ test.describe("Page health", () => {
     // blocks.
     //
     // SEVEN LABELS, NOT SIX. One per section opener — hero, spaces,
-    // menus, reviews, location, reserve — plus the "From the kitchen"
+    // menus, reviews, visit, reserve — plus the "From the kitchen"
     // kicker that heads the four-dish band inside `#menus`. That seventh
     // is deliberate: it is an eyebrow *inside* a section rather than at
     // its head, so if the rail only held for section openers it would
