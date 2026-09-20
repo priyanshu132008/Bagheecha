@@ -156,6 +156,16 @@ export const SITE = {
   /** TODO(owner): Google rating + count. Empty hides the line. */
   googleRating: "",
   googleReviewCount: "",
+  /** Turn 8: a typed mirror of the rating fields above. When both
+   *  are non-null, `ReviewsCards` renders a "4.6 on Google · 312
+   *  reviews" badge above the carousel; either being null hides it.
+   *  Numbers stay in JS — `.toFixed(1)` and `.toLocaleString("en-IN")`
+   *  formatting lives in the component. Placeholder values demonstrate
+   *  the badge UI; replace with real Google Place data when the owner
+   *  provides it. The string fields above are kept untouched so any
+   *  other consumer of `isFilled(SITE.googleRating)` continues to work. */
+  googleRatingNumber: 4.6 as number | null,
+  googleReviewCountNumber: 312 as number | null,
   /** TODO(owner): delivery radius, only used in #order as a small
    *  line under the Direct card body. Empty hides the line. */
   deliveryRadius: "",
