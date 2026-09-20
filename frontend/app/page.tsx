@@ -9,7 +9,8 @@ import { OrderOnline } from "@/components/sections/OrderOnline";
 import { ReviewsCards } from "@/components/sections/ReviewsCards";
 import { ActionButton } from "@/components/ui/ActionButton";
 import MobileActionBar from "@/components/ui/MobileActionBar";
-import { CONTACT, LOCATION } from "@/lib/constants/site";
+import { CONTACT, LOCATION, WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
+import { getFeaturedDishes } from "@/lib/menu/queries";
 
 /**
  * The page.
@@ -146,13 +147,37 @@ const ROW =
 
 const LEDE = "max-w-xl text-pretty text-[15px] leading-7 text-ink-muted";
 
-export default function Home() {
+export default async function Home() {
+  /**
+   * The page-level data fetches.
+   *
+   * Hero pulls its own mosaic data here so it stays a thin client
+   * component (`HeroMosaicBackground` owns the swap state, not the
+   * server-side page). `Menu` runs its own parallel fetches internally
+   * — it fetches five things in `Promise.all`, and reaching for them
+   * here would mean six round trips serialised.
+   *
+   * If the database is unreachable, every getter short-circuits to the
+   * constants in `lib/constants/menu.ts` and the site renders as
+   * before. The only thing the page itself needs is the eight kitchen
+   * plates that drive the hero crossfade.
+   */
+  const featuredDishes = await getFeaturedDishes();
+
   return (
     <>
       <Navbar />
 
-      <main className="flex flex-1 flex-col">
-        <Hero />
+      {/* `overflow-x-clip` is the global viewport failsafe: if any
+          child ever extends past 100vw (the horizontal bar rail was
+          the offender), the page itself refuses to scroll wide and
+          the white-void-to-the-right never appears. `clip` rather than
+          `hidden` — `hidden` would make this element a scroll
+          container on both axes, which silently breaks every
+          `position: sticky` descendant (the atmospheres pin, the
+          header). `clip` clips without establishing a scroll context. */}
+      <main className="flex flex-1 flex-col overflow-x-clip">
+        <Hero featuredDishes={featuredDishes} />
 
         <Atmospheres />
 
@@ -205,7 +230,17 @@ export default function Home() {
               a table of ways to reach the hotel is information, and
               boxing it would make it look like a promotional unit.
               The row typography is the display face so a phone number
-              reads as information you can dial, not a label. */}
+              reads as information you can dial, not a label.
+
+              ONE NUMBER FOR BOTH VOICE AND WHATSAPP (2026-09-20).
+              The earlier build kept two — voice on this number and
+              WhatsApp on 9049915238 — which meant two `Call` rows for
+              what was effectively one line. With the consolidation
+              to a single 93730 41417 there is now one Call row and
+              one WhatsApp row, both pointing at the same line: the
+              guest dials, the guest messages, and the desk answers
+              either way. The display string lives on `CONTACT` so
+              reformats happen in one place. */}
           <MaskReveal delay={0.24} duration={0.9}>
             <ul className="mt-10 border-t border-line">
               {[
@@ -216,14 +251,8 @@ export default function Home() {
                   external: false,
                 },
                 {
-                  label: "Call — alternate",
-                  value: CONTACT.callAlt.display,
-                  href: CONTACT.callAlt.href,
-                  external: false,
-                },
-                {
                   label: "WhatsApp",
-                  value: `+91 ${CONTACT.whatsapp.local}`,
+                  value: CONTACT.whatsapp.display,
                   href: CONTACT.whatsapp.href,
                   external: true,
                 },
@@ -255,7 +284,7 @@ export default function Home() {
             <div className="mt-10">
               <ActionButton
                 href={LOCATION.directionsHref}
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 external
               >
@@ -290,7 +319,7 @@ export default function Home() {
           <MaskReveal delay={0.24} duration={0.9}>
             <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <ActionButton
-                href={CONTACT.whatsapp.href}
+                href={WHATSAPP_RESERVATION_HREF}
                 size="lg"
                 external
                 className="w-full justify-center sm:w-auto"
@@ -299,7 +328,7 @@ export default function Home() {
               </ActionButton>
               <ActionButton
                 href={CONTACT.call.href}
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 cursor="hover"
                 className="w-full justify-center sm:w-auto"

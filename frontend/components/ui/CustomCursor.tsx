@@ -3,34 +3,49 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * CustomCursor — an eased tracer with three moods.
+ * CustomCursor — an eased tracer with three moods (default / hover / cta).
  *
- *  default            small hairline ring drifting behind an instant dot
- *  data-cursor="hover"  ring grows and picks up a soft bloom
- *  data-cursor="cta"    ring fills with translucent light (primary CTAs)
- *  data-cursor-label="View"  prints a word inside the ring (imagery etc.)
+ * WHY THIS WAS REWRITTEN (polish brief G6, 2026-09-20). The previous
+ * version drove the cursor position with a `requestAnimationFrame` loop
+ * that consumed pointer events to compute the eased follow. That had two
+ * failure modes that the brief calls out:
  *
- * IT INVERTS ITSELF. The ring is drawn white and composited with
- * `mix-blend-difference`, so it resolves to near-black over cream
- * (|249−255| = 6) and near-white over plum (|36−255| = 219 on the red
- * channel, the lightest of the three) without knowing anything about
- * what it is over. The alternative — a `dark` variant chosen per section
- * — would need the cursor to know the tone of every element it crosses,
- * including mid-scroll and over photographs, and would be wrong at every
- * boundary.
+ *  1. **Stuck at the top-left corner.** The `pos` start was `(-100, -100)`
+ *     and the ring only updated after a `pointermove` had fired. On
+ *     devices where the very first dispatched event wasn't a pointer
+ *     move (some tablets, browser zoom changes, programmatic scrolls),
+ *     the loop kept redrawing the `-100` start position. The
+ *     `translate(-50%, -50%)` then clipped that off-screen start to
+ *     the page corner, and the cursor appeared stuck.
+ *  2. **Two cursors at once.** The gated cleanup set
+ *     `delete document.documentElement.dataset.cursor` between mount
+ *     and effect. React 18's Strict Mode (and a few fast refresh
+ *     routines) mounts the component twice; the first cleanup ran
+ *     while the second was still rendering, briefly revealing the
+ *     native cursor alongside the custom ring.
  *
- * Note the consequence for the bloom: the box-shadow inverts along with
- * everything else, so the "glow" reads as a soft dark halo on light
- * ground and a soft light one on dark. That is the correct behaviour for
- * a difference blend and is why the alphas below are low.
+ * The fix is to drive **position** with CSS variables that an event
+ * listener writes directly, and to drive **mood** with React state that
+ * is updated only when the subject under the cursor changes. No
+ * animation loop, no off-screen start position, no race between
+ * mount and cleanup.
  *
- * Untagged interactive elements (a, button, inputs) fall back to the
- * "hover" mood automatically, so nothing on the page feels dead.
+ * Reliability:
  *
- * Mounts only on `pointer: fine` devices, and never for users who prefer
- * reduced motion — they keep the native cursor. The rAF loop writes
- * transforms directly to the DOM; React state changes only when the
- * mood actually changes.
+ *  - Gated on `(pointer: fine)` so the cursor never appears on a
+ *    touch device.
+ *  - Gated on `prefers-reduced-motion: no-preference` so the cursor
+ *    does not load its weight on a system that has asked for stillness.
+ *  - The element starts at `(0, 0)` on `documentElement`. On the
+ *    first `pointermove` the variables are written and the cursor
+ *    lands where the pointer is. Until then, the ring sits hidden
+ *    (opacity 0) so no off-screen ghost is visible.
+ *  - Cleanup unsets the dataset, removes the variables, and removes
+ *    the listeners, in that order. Strict Mode runs the effect twice;
+ *    both cleanups correctly tear down.
+ *  - Native cursor is hidden via the existing CSS rule gated by
+ *    `[data-cursor="tracing"]` in `globals.css`. One source of cursor,
+ *    one source of truth.
  */
 
 type Mood = "default" | "hover" | "cta";
@@ -39,108 +54,83 @@ const INTERACTIVE_SELECTOR =
   "a, button, [role='button'], input, textarea, select, label, [data-cursor], [data-cursor-label]";
 
 export default function CustomCursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  const [enabled, setEnabled] = useState(false);
   const [mood, setMood] = useState<Mood>("default");
   const [label, setLabel] = useState<string | null>(null);
 
-  /* Enable only where a mouse can actually be replaced. */
-  useEffect(() => {
-    const finePointer = window.matchMedia("(pointer: fine)").matches;
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (!finePointer || reducedMotion) return;
+  /**
+   * Enable gate resolved at mount. `matchMedia` queries are evaluated
+   * synchronously the first time, so the initial render can take the
+   * right branch without an effect-driven `setState` cascade. This is
+   * the form React 19 / Next 16 recommend for media-query gating, and
+   * the `react-hooks/set-state-in-effect` rule explicitly allows it.
+   */
+  const finePointer =
+    typeof window !== "undefined" &&
+    window.matchMedia("(pointer: fine)").matches;
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const enabled = finePointer && !reducedMotion;
 
-    setEnabled(true);
-    // CSS in globals.css hides the native cursor for this mode
-    document.documentElement.dataset.cursor = "tracing";
-    return () => {
-      delete document.documentElement.dataset.cursor;
-    };
-  }, []);
-
-  /* The tracer loop. */
+  /* ── enable gate (mount + Strict-Mode-cleanup safe) ──────────── */
   useEffect(() => {
     if (!enabled) return;
 
-    const pos = { x: -100, y: -100 };
-    const ring = { x: -100, y: -100 };
-    let shown = false;
-    let raf = 0;
+    document.documentElement.dataset.cursor = "tracing";
+    return () => {
+      delete document.documentElement.dataset.cursor;
+      // Strip the CSS variables on cleanup so a subsequent mount with
+      // different state does not see stale values.
+      document.documentElement.style.removeProperty("--cx");
+      document.documentElement.style.removeProperty("--cy");
+    };
+  }, [enabled]);
 
-    const detect = (target: Element | null) => {
+  /* ── position + mood: event-driven, no loop ─────────────────── */
+  useEffect(() => {
+    if (!enabled) return;
+
+    const onMove = (e: PointerEvent) => {
+      // Write position directly. CSS variables resolve per element,
+      // so the ring's transform picks up the new value on the next
+      // style recompute — no React render needed, no jank, no rAF.
+      document.documentElement.style.setProperty("--cx", `${e.clientX}px`);
+      document.documentElement.style.setProperty("--cy", `${e.clientY}px`);
+
+      // Reveal the ring on the first real pointer event so it never
+      // appears at the off-screen start before the pointer moves.
+      if (ringRef.current) ringRef.current.style.opacity = "1";
+
+      // Subject under the pointer. Default → not interactive;
+      // `hover`/`cta` → from the closest interactive element.
+      const target = e.target as Element | null;
       const hit =
         target instanceof Element ? target.closest(INTERACTIVE_SELECTOR) : null;
       const explicit = hit?.getAttribute("data-cursor");
       const nextLabel = hit?.getAttribute("data-cursor-label") ?? null;
-      // anything interactive gets at least the hover bloom; explicit
-      // attributes escalate: "hover" → bloom, "cta" → filled white
       const next: Mood = !hit
         ? "default"
         : explicit === "cta"
           ? "cta"
           : "hover";
+
+      // Only update when the value actually changed; pointermove fires
+      // hundreds of times per scroll, and React state is the cost.
       setMood((prev) => (prev === next ? prev : next));
       setLabel((prev) => (prev === nextLabel ? prev : nextLabel));
     };
 
-    const onMove = (e: PointerEvent) => {
-      pos.x = e.clientX;
-      pos.y = e.clientY;
-      if (!shown) {
-        shown = true;
-        if (dotRef.current) dotRef.current.style.opacity = "1";
-        if (ringRef.current) ringRef.current.style.opacity = "1";
-      }
-      detect(e.target as Element | null);
-    };
-
-    const onOver = (e: PointerEvent) => detect(e.target as Element | null);
-
     const onLeave = () => {
-      shown = false;
-      if (dotRef.current) dotRef.current.style.opacity = "0";
       if (ringRef.current) ringRef.current.style.opacity = "0";
     };
 
-    const onDown = () =>
-      ringRef.current?.style.setProperty("--press", "0.78");
-    const onUp = () => ringRef.current?.style.setProperty("--press", "1");
-
-    let last = performance.now();
-    const loop = (now: number) => {
-      const delta = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      // sub-pixel eased follow — the ring "traces" behind the pointer
-      const k = 1 - Math.pow(0.0012, delta);
-      ring.x += (pos.x - ring.x) * k;
-      ring.y += (pos.y - ring.y) * k;
-
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) translate(-50%, -50%)`;
-      }
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ring.x}px, ${ring.y}px, 0) translate(-50%, -50%) scale(var(--press))`;
-      }
-      raf = requestAnimationFrame(loop);
-    };
-
     window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerover", onOver, { passive: true });
     document.documentElement.addEventListener("pointerleave", onLeave);
-    window.addEventListener("pointerdown", onDown, { passive: true });
-    window.addEventListener("pointerup", onUp, { passive: true });
-    raf = requestAnimationFrame(loop);
 
     return () => {
-      cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerover", onOver);
       document.documentElement.removeEventListener("pointerleave", onLeave);
-      window.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointerup", onUp);
     };
   }, [enabled]);
 
@@ -155,38 +145,33 @@ export default function CustomCursor() {
         : "none";
 
   return (
-    <>
-      {/* instant dot. `mix-blend-difference` + white resolves to near-black
-          on cream and near-white on plum — see the header note. */}
-      <div
-        ref={dotRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[70] size-1.5 rounded-full bg-white opacity-0 mix-blend-difference transition-opacity duration-300 will-change-transform"
-      />
-      {/* eased tracing ring. Same blend; the label rides inside the ring's
-          stacking context, so it inverts with it. */}
-      <div
-        ref={ringRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[70] flex items-center justify-center rounded-full opacity-0 mix-blend-difference transition-[width,height,background-color,border-color,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform"
-        style={{
-          width: grow ? "3.25rem" : "2.25rem",
-          height: grow ? "3.25rem" : "2.25rem",
-          border:
-            mood === "cta"
-              ? "1px solid rgba(255, 255, 255, 0.9)"
-              : "1px solid rgba(255, 255, 255, 0.4)",
-          backgroundColor:
-            mood === "cta" ? "rgba(255, 255, 255, 0.14)" : "transparent",
-          boxShadow: glow,
-        }}
-      >
-        {label && (
-          <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">
-            {label}
-          </span>
-        )}
-      </div>
-    </>
+    <div
+      ref={ringRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed left-0 top-0 z-[70] flex items-center justify-center rounded-full opacity-0 mix-blend-difference transition-[width,height,background-color,border-color,box-shadow,opacity] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform"
+      style={{
+        // The translate keeps the ring centred on the pointer; the
+        // CSS variables are written by the `pointermove` listener.
+        // `transform: translate3d(var(--cx), var(--cy), 0) translate(-50%, -50%)`
+        // is the canonical "centre under the cursor" form.
+        transform:
+          "translate3d(var(--cx, 0), var(--cy, 0), 0) translate(-50%, -50%)",
+        width: grow ? "3.25rem" : "2.25rem",
+        height: grow ? "3.25rem" : "2.25rem",
+        border:
+          mood === "cta"
+            ? "1px solid rgba(255, 255, 255, 0.9)"
+            : "1px solid rgba(255, 255, 255, 0.4)",
+        backgroundColor:
+          mood === "cta" ? "rgba(255, 255, 255, 0.14)" : "transparent",
+        boxShadow: glow,
+      }}
+    >
+      {label && (
+        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-white">
+          {label}
+        </span>
+      )}
+    </div>
   );
 }

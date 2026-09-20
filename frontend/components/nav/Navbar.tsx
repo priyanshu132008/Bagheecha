@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 import { ActionButton } from "@/components/ui/ActionButton";
-import { NAV_LINKS, RESERVE_HREF } from "@/lib/constants/site";
+import { NAV_LINKS, WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
 import { cn } from "@/lib/utils";
 
 /**
@@ -162,9 +162,11 @@ export default function Navbar() {
                 the top of the fold is the giveaway of an assembled
                 page. */}
             <ActionButton
-              href={RESERVE_HREF}
-              variant="outline"
+              href={WHATSAPP_RESERVATION_HREF}
+              variant="secondary"
               size="sm"
+              external
+              data-testid="nav-book"
               className="hidden md:inline-flex"
             >
               Book a Table
@@ -245,8 +247,9 @@ export default function Navbar() {
               className="mt-12"
             >
               <ActionButton
-                href={RESERVE_HREF}
+                href={WHATSAPP_RESERVATION_HREF}
                 size="lg"
+                external
                 onClick={() => setOpen(false)}
                 className="w-full justify-center"
               >

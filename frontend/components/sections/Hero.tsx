@@ -1,184 +1,147 @@
+"use client";
+
+import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
+import { memo, useEffect, useRef, useState } from "react";
 
 import { ActionButton } from "@/components/ui/ActionButton";
 import { MaskRise } from "@/components/motion/MaskReveal";
-import { FEATURED_DISHES } from "@/lib/constants/images";
-import { RESERVE_HREF } from "@/lib/constants/site";
+import { WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
+import type { FeaturedDish } from "@/lib/menu/queries";
 
 /**
- * Hero — the opening frame, full bleed.
+ * Hero — the opening frame, full bleed, four-column mosaic.
  *
- * THE BOX IS GONE. This was a rounded plate inset from the page edges
- * with the display type crossing its lower lip — a considered
- * composition, and the wrong one: a rounded container floating in a
- * margin is the shape of a component library, and it made the first
- * thing a guest sees read as software rather than as a restaurant. The
- * backdrop now runs to all four edges and the type sits on it.
+ * THE BOX IS GONE. A rounded plate inset from the page edges with the
+ * display type crossing its lower lip is the shape of a component
+ * library — it makes the first thing a guest sees read as software
+ * rather than as a restaurant. The backdrop runs to all four edges and
+ * the type sits on it.
  *
- * THE BACKDROP IS THE FOUR KITCHEN PHOTOGRAPHS. Not one of them and not
- * a stock room: four upright panels, one plate each, drifting. It is the
- * most honest thing the page could open on — it is this kitchen's own
- * food, shot on a phone, and the guest's first impression is the product
- * rather than the decor. The panels are `aria-hidden` with empty `alt`:
- * as a backdrop they carry no information the `<h1>` does not, and their
- * real descriptions live on the four photographs in the kitchen band
- * below, where a reader meets them one at a time instead of four at once.
+ * THE BACKDROP IS A FOUR-COLUMN MOSAIC. Not one photograph, not a 2x2,
+ * and not the same plate four times: four upright strips, one image
+ * per strip, dissolving into the next. The eight kitchen plates (the
+ * four originals plus the four new arrivals) live in two pools — four
+ * "visible", four "hidden". Every 1500ms the loop picks one of the
+ * four columns at random and overlays a hidden-pool dish on top of
+ * the visible one, fading it in over 800ms.
  *
- * WHY FOUR COLUMNS RATHER THAN A 2x2. Three of the four are portrait and
- * the fourth is square, so a two-by-two collage crops every one of them
- * landscape and beheads the subject. Four columns at 25% are already
- * portrait at any viewport — the shape they were shot in. On a phone it
- * falls to two columns and two rows for the same reason.
+ * THE BLINK IS THE OLD BACKDROP'S FAILURE. The earlier pass used
+ * `AnimatePresence` to mount/unmount each swap, which exposed a
+ * blank column between the exit and the entry on slower devices and
+ * tore down the browser's image cache every cycle. The replacement
+ * keeps all four base images mounted permanently and adds a
+ * per-column overlay for the swap. The overlay fades from 0 → 1; the
+ * base only changes src *after* the overlay has finished, so the
+ * reader sees one image blending into the next with zero blank
+ * frames between them.
  *
- * WHAT KEEPS THE TYPE READABLE. The old plate earned its keep: because
- * the type crossed onto flat plum below it, the ground under the
- * headline was a known colour and contrast was a constant rather than a
- * per-frame gamble. A photograph offers no such guarantee — these are
- * food shots, and their brightest pixels are specular highlights at 1.0
- * linear, where white type measures 1:1. So the guarantee is rebuilt as
- * a layer: `.hero-vignette` in `globals.css`, a two-axis ramp whose
- * stops are chosen against those highlights and written out where they
- * can be read. `e2e/hero.spec.ts` measures the composited result per
- * pixel over the whole copy block, and that is the assertion the plate
- * used to carry.
+ * PARALLAX FOR DEPTH. The mosaic translates vertically at 30% of the
+ * scroll speed, decoupling the background from the foreground type.
+ * As the reader scrolls, the food grid drifts up slower than the page
+ * — the same effect a Steadicam gives a tracking shot. The transform
+ * is on a motion value (`useTransform`), so the GPU composites the
+ * shift on the existing layer; no layout work, no React re-renders
+ * during the scroll.
  *
- * WHY THE RAMP DOES NOT USE THE OBVIOUS ONE-LINER. The brief suggested
- * `from-plum/90 via-black/40 to-transparent`. Measured, that puts the
- * eyebrow at roughly 0.36 alpha, which over a highlight is 2.5:1 — not
- * a design opinion, a failure. The ramp here holds 0.90 through the
- * point where the type starts and only then lets go, and it lets go
- * *above* the copy rather than through it, so the photographs stay
- * bright in the band where nothing is written.
- *
- * AND THE RAMP IS GUARDED FROM BOTH SIDES. Making it darker is always
- * available and always passes a contrast test, which is exactly why
- * `hero.spec.ts` also asserts the band above the type is still bright:
- * measured, mean 0.085-0.090 linear with a maximum of 1.0000, so a
- * specular highlight is arriving at full strength. A single `bg-plum/95`
- * plate over the whole frame would satisfy every contrast reading in
- * that file and fail that one — which is the "mathematically present,
- * visually absent" failure this page has already been rebuilt twice to
- * escape.
+ * STATE ISOLATION. The mosaic is a `React.memo` child that owns its
+ * own swap state. The foreground copy block sits in `Hero()` itself
+ * — a sibling of the mosaic, not a parent of its state. The 1500ms
+ * interval fires every column independently, so the parent and the
+ * foreground never re-render due to a swap.
  *
  * THE TYPE IS THE DESIGN. One word, lowercase, at 10.5vw with tight
  * negative tracking, anchored bottom-left — a wordmark rather than a
- * headline with a subtitle under it. The asterisk is the only vermillion
- * on the first screen and it is `aria-hidden`: it is a mark, not a
- * character, and "bagheecha asterisk" is not the name of the restaurant.
- * The `sr-only` "Hotel" in front of it is, so the accessible name is the
- * real one.
+ * headline with a subtitle under it. The asterisk is the only
+ * vermillion on the first screen and it is `aria-hidden`: it is a
+ * mark, not a character, and "bagheecha asterisk" is not the name of
+ * the restaurant. The `sr-only` "Hotel" in front of it is, so the
+ * accessible name is the real one.
  *
- * THE CTA IS A GHOST. Both actions are `outline`, so the first viewport
- * contains no solid button at all. That is deliberate: with a wordmark
- * this size, a filled block beside it is two things shouting. The house
- * rule is "never two solids"; it does not require one.
+ * THE CTA IS A GHOST. Both actions are `outline`, so the first
+ * viewport contains no solid button at all. With a wordmark this
+ * size, a filled block beside it is two things shouting.
  *
- * LCP. Panel one carries `priority` and is preloaded; the other three are
- * `loading="eager"` — they are all in the first viewport, so lazy would
- * be a lie, but four `<link rel=preload>` tags for one backdrop is
- * bandwidth taken from the text. CLS stays zero because the static
- * imports give `next/image` their intrinsic sizes at build time.
+ * THE OVERLAY. A single deep-plum ramp covers the whole grid (top
+ * transparent, mid-plum at 40%, full plum at the foot) so the type
+ * below clears AA on every frame, on every strip. The drift happens
+ * behind the ramp; the ramp does not move. Measured against the
+ * composited result, not the token, by `e2e/hero.spec.ts`.
  *
- * Type still arrives as a staged mask rise — each line climbing out from
- * under its own edge, which is what makes it read as a title sequence
- * rather than a page that finished loading. Reduced motion is not
- * branched on here; `<MotionConfig reducedMotion="user">` in the root
- * layout handles it inside Framer's animation layer, so the markup is
- * identical on both sides of hydration.
+ * LCP. Strip one carries `priority` and is preloaded; the other
+ * three are `loading="eager"`. They all live in the first viewport,
+ * so lazy would be a lie, but four `<link rel=preload>` tags for one
+ * backdrop is bandwidth taken from the text. CLS stays zero because
+ * the static imports give `next/image` their intrinsic sizes at
+ * build time.
  */
 
 const ZONE_LEGEND = ["Terrace Lounge", "AC Fine Dining", "Classic Non-AC"];
 
-/** The panel drift classes, in the order the dishes are registered. */
+/** How often the mosaic picks one column to start a crossfade. */
+const SWAP_MS = 1500;
+
+/** How long the crossfade itself takes. */
+const FADE_MS = 800;
+
+/** How far the parallax translates the backdrop for every 1000px of
+ *  scroll — 30% of the page speed. Heavy enough to read as motion,
+ *  light enough that the food never drifts out of frame. */
+const PARALLAX_RANGE = [0, 300] as const;
+const PARALLAX_INPUT = [0, 1000] as const;
+
 const DRIFT = ["a", "b", "c", "d"] as const;
 
-export default function Hero() {
+/* ------------------------------------------------------------------
+   Tiny seeded PRNG (mulberry32) — used only to pick the *first*
+   frame, so the server and the client render the same opening
+   mosaic. After mount, the swap interval uses `Math.random()`,
+   which is fine because it touches state, not markup.
+------------------------------------------------------------------- */
+
+function mulberry32(seed: number) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const SEED = 0x9e3779b1;
+
+/** Fisher-Yates using a seeded PRNG, so server and client agree. */
+function shuffle<T>(arr: T[], rand: () => number): T[] {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[] }) {
   return (
     <section
       id="top"
       data-tone="dark"
       className="relative flex min-h-dvh flex-col overflow-hidden bg-plum"
     >
-      {/* -----------------------------------------------------------------
-          The backdrop. Four panels, a hairline between each, each one a
-          plate from the card below.
-
-          `grid-cols-2 md:grid-cols-4` and not `h-full`: the grid is
-          absolutely positioned and stretched by `inset-0`, so it takes
-          the section's height at every viewport without the section ever
-          being sized by it — which is what keeps `min-h-dvh` honest when
-          the copy is short and the window is wide.
-
-          The hairlines are `border-line`, so they are warm cream at 16%
-          rather than a grey that would read as a seam in a screenshot.
-
-          `pointer-events-none` because it is paint. It sits at z-0, so
-          it is behind the type and a click on a button never reaches it
-          — but the frame is mostly *not* type, and in the empty band
-          above the copy this div is the topmost thing under the cursor.
-          Left to `auto` it quietly owns every click, drag and text
-          selection in that region, and `e2e/hero.spec.ts` asserts it.
-      ------------------------------------------------------------------ */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0">
-        <div className="grid h-full grid-cols-2 md:grid-cols-4">
-          {FEATURED_DISHES.map((dish, i) => (
-            <div
-              key={dish.label}
-              className="relative overflow-hidden border-l border-line first:border-l-0"
-            >
-              <Image
-                src={dish.src}
-                alt=""
-                fill
-                {...(i === 0 ? { priority: true } : { loading: "eager" as const })}
-                sizes="(min-width: 768px) 25vw, 50vw"
-                placeholder="blur"
-                className={`hero-panel__img hero-panel__img--${DRIFT[i]} object-cover`}
-                style={{ objectPosition: dish.focal ?? "50% 50%" }}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* The ramp that makes the frame readable. `pointer-events-none` is
-          load-bearing: it is a full-viewport layer between the
-          photographs and every control on the page, and a version of it
-          that takes pointer events is how "Reserve a Place" stops working
-          for reasons no screenshot shows. `aria-hidden` because it is
-          paint, not content. */}
-      <div
-        aria-hidden="true"
-        className="hero-vignette pointer-events-none absolute inset-0 z-10"
-      />
+      <HeroMosaicBackground featuredDishes={featuredDishes} />
+      <HeroVignette />
 
       {/* -----------------------------------------------------------------
-          The copy block.
-
-          `mt-auto` rather than `flex-1`, and the difference is not
-          cosmetic: `flex-1` makes this box absorb the whole section, so
-          its height stops describing the type and starts describing the
-          viewport. `mt-auto` pins it to the foot and lets it size to its
-          own content, which is what makes `#top .container-x` a
-          meaningful box for the contrast probe to clip to — and what
-          keeps the upper third of the frame genuinely open, which is
-          where the photographs are.
-
-          The mobile bottom padding is not symmetric with the desktop one
-          on purpose: on a phone the fixed quick-action bar owns the last
-          56px of the viewport, so the footline has to clear it.
+          The copy block. A sibling of the mosaic, not a descendant of
+          its state. The 1500ms swap interval lives inside the memoized
+          mosaic child and never re-renders this block.
       ------------------------------------------------------------------ */}
       <div className="container-x relative z-20 mt-auto pb-24 pt-6 md:pb-14 md:pt-8">
         <MaskRise delay={0.1} duration={0.8} className="eyebrow">
           Hotel Bagheecha &middot; Virar
         </MaskRise>
 
-        {/* One word, and it is the whole composition. `text-balance` is
-            deliberately absent — this must never wrap, and balancing a
-            single word does nothing but invite the browser to try.
-
-            The `sr-only` "Hotel" is load-bearing for the accessible name;
-            the asterisk is hidden for the opposite reason. */}
         <h1 className="mt-4 font-display text-[clamp(3.2rem,10.5vw,9rem)] font-normal leading-[0.85] tracking-tighter text-ink">
           <MaskRise delay={0.18}>
             <span className="sr-only">Hotel </span>
@@ -189,27 +152,6 @@ export default function Hero() {
           </MaskRise>
         </h1>
 
-        {/* ---------------------------------------------------------------
-            The supporting row, and the reason the photographs are
-            visible at all.
-
-            Stacked under the wordmark — the obvious layout — the copy
-            block measured 590px of a 720px viewport, which left the four
-            panels a strip of about 130px at the top and made the whole
-            backdrop decorative rather than seen. Setting the subtitle and
-            the actions side by side under the wordmark instead of over
-            each other takes 120px out of the block, and every one of
-            those pixels goes back to the photographs.
-
-            It is also the better page: a wordmark, a line of copy and a
-            pair of buttons at three different x-positions is a magazine
-            spread; the same three things stacked against the left margin
-            is a template.
-
-            Below `lg` there is no room for two columns and the row
-            collapses to a stack, which is the same layout the whole page
-            uses at that width.
-        ---------------------------------------------------------------- */}
         <div className="mt-7 grid grid-cols-12 items-end gap-x-6 gap-y-7">
           <div className="col-span-12 lg:col-span-5">
             <MaskRise delay={0.46} duration={0.9}>
@@ -220,23 +162,21 @@ export default function Hero() {
             </MaskRise>
           </div>
 
-          {/* Two ghosts, never a solid. See the note at the head of this
-              file: with a wordmark this size, a filled block beside it is
-              two things shouting. */}
           <div className="col-span-12 lg:col-span-6 lg:col-start-7 lg:justify-self-end">
             <MaskRise delay={0.56} duration={0.9}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:justify-end">
                 <ActionButton
-                  href={RESERVE_HREF}
-                  variant="outline"
+                  href={WHATSAPP_RESERVATION_HREF}
+                  variant="secondary"
                   size="lg"
+                  external
                   className="w-full justify-center sm:w-auto"
                 >
                   Reserve a Place
                 </ActionButton>
                 <ActionButton
                   href="#menus"
-                  variant="outline"
+                  variant="secondary"
                   size="lg"
                   cursor="hover"
                   className="w-full justify-center sm:w-auto"
@@ -248,22 +188,6 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* -----------------------------------------------------------------
-            Footline. Closes the frame with a hairline: the three rooms
-            named plainly on the left, the scroll cue on the right.
-
-            The separators are vermillion — the accent doing the one job
-            it is genuinely good at, which is being a mark rather than a
-            word. They are `aria-hidden`, so the 3:1 graphical-object
-            floor does not bind them, and at 0.7 alpha they clear it
-            anyway.
-
-            The cue is `md`-and-up only, the exact complement of the
-            mobile action bar. Below `md` the bar owns the bottom strip
-            of the screen and the cue would land underneath it — a cue
-            half-eaten by a toolbar reads as a bug, and a phone hardly
-            needs one: the content visibly runs past the fold.
-        ------------------------------------------------------------------ */}
         <div className="mt-8 md:mt-12">
           <div aria-hidden="true" className="rule-hairline" />
 
@@ -271,11 +195,6 @@ export default function Hero() {
             <ul className="col-span-12 flex flex-wrap items-center gap-x-5 gap-y-2 md:col-span-8">
               {ZONE_LEGEND.map((zone, i) => (
                 <li key={zone} className="flex items-center gap-5">
-                  {/* Separators are `sm`-and-up only. Below that the
-                      legend wraps to two lines, and a diamond leading
-                      the second line — separated from the word it was
-                      meant to sit between — reads as a bullet point
-                      nobody wrote. */}
                   {i > 0 && (
                     <span
                       aria-hidden="true"
@@ -307,5 +226,283 @@ export default function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------
+   The mosaic, isolated.
+
+   `React.memo` because the foreground copy is a sibling of this
+   child, and a swap here must never reach the typography. The
+   component owns its own state and has no props — memo will skip
+   any future re-render triggered from the parent.
+
+   The parallax `y` is a `MotionValue`, so scroll updates the
+   transform on the GPU without going through React's commit
+   phase. The swap state changes only on the 1500ms interval, and
+   the resulting re-render is local to the mosaic's JSX subtree.
+------------------------------------------------------------------- */
+
+interface Swap {
+  /** Which column is mid-crossfade. */
+  col: number;
+  /** The dish being faded in. The base of that column still shows the
+   *  old dish until the fade completes. */
+  incoming: number;
+}
+
+const HeroMosaicBackground = memo(function HeroMosaicBackground({
+  featuredDishes,
+}: {
+  featuredDishes: FeaturedDish[];
+}) {
+  const total = featuredDishes.length;
+
+  // The opening mosaic is computed once at mount, deterministically.
+  // After mount, the swap interval is non-deterministic by design —
+  // `Math.random()` in the interval handler does not affect markup,
+  // only state, so there is no hydration mismatch.
+  const [{ visible, pool }, setLayout] = useState(() => {
+    const rand = mulberry32(SEED);
+    const shuffled = shuffle(
+      Array.from({ length: total }, (_, i) => i),
+      rand,
+    );
+    return { visible: shuffled.slice(0, 4), pool: shuffled.slice(4) };
+  });
+
+  // The active overlay, if any. Mounting an overlay image on top of
+  // the visible one is what kills the blank-frame between AnimatePresence's
+  // exit and entry — both layers are present while the opacity walks.
+  const [overlay, setOverlay] = useState<Swap | null>(null);
+
+  // `inFlightRef` is the synchronously-readable "is a fade mounted
+  // right now" flag. Reading the React state via a ref-mirror would
+  // be asynchronous — the post-render `useEffect` runs after the
+  // next paint, so two ticks could land in the same frame and both
+  // think the slot is free. Updating the ref immediately, beside the
+  // state setter, closes that window.
+  const inFlightRef = useRef(false);
+
+  // `layoutRef` mirrors `{ visible, pool }` for the same reason: the
+  // interval handler needs the *current* swap candidates to make a
+  // random pick, but reading React state from inside the timer is a
+  // closure over the mount-time snapshot. The mirror is updated beside
+  // the state setter so two reads in the same tick agree on what is
+  // visible right now.
+  const layoutRef = useRef<{ visible: number[]; pool: number[] }>({
+    visible,
+    pool,
+  });
+  useEffect(() => {
+    layoutRef.current = { visible, pool };
+  }, [visible, pool]);
+
+  // Parallax — `scrollY` is a live motion value, `y` maps it through
+  // a 30% range. The motion values update the GPU directly, never
+  // re-rendering React.
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [...PARALLAX_INPUT], [...PARALLAX_RANGE]);
+
+  // The swap interval. Every 1500ms, pick one column and one hidden
+  // dish, mount an overlay on that column, and after the fade
+  // completes promote the overlay into the visible layout and free
+  // the old dish back into the pool. Skips ticks while a fade is
+  // mid-flight — the brief is "one random column per tick", and
+  // stacking two crossfades onto the same column would land the
+  // base on whichever promote ran last, not on whichever was seen.
+  //
+  // The interval handler is intentionally *not* a React updater: it
+  // picks from `layoutRef`, mutates refs, calls `setOverlay`, and
+  // schedules a timer. None of that happens inside a `setLayout`
+  // callback, so React's Strict Mode (which double-invokes state
+  // updaters in dev) cannot double-fire the swap and corrupt the
+  // mosaic. `setLayout` itself lives in the promote callback, where
+  // it does run twice in dev — but the updater is pure (same
+  // inputs, same output), so the double call is a no-op.
+  useEffect(() => {
+    const promoteTimers = new Set<number>();
+
+    const id = window.setInterval(() => {
+      if (inFlightRef.current) return;
+
+      const { visible: v, pool: p } = layoutRef.current;
+      if (p.length === 0) return;
+
+      const col = Math.floor(Math.random() * v.length);
+      const poolIdx = Math.floor(Math.random() * p.length);
+      const incoming = p[poolIdx];
+
+      // Mark the slot as in-flight *now* — before the timer is
+      // scheduled — so the very next interval tick sees the lock and
+      // skips. The flag goes down inside the promote callback below.
+      inFlightRef.current = true;
+
+      // Mount the overlay. We deliberately *do not* touch `visible`
+      // here — the base image keeps showing the old dish until the
+      // overlay has fully faded in. That is the whole point of the
+      // overlay pattern: the reader never sees a blank frame because
+      // the base image is still on screen during the fade.
+      setOverlay({ col, incoming });
+
+      const promote = window.setTimeout(() => {
+        promoteTimers.delete(promote);
+        inFlightRef.current = false;
+        setOverlay((current) =>
+          current && current.col === col && current.incoming === incoming
+            ? null
+            : current,
+        );
+        // Pure updater: returning the previous reference when the
+        // column no longer holds the dish we picked earlier means
+        // React skips a commit, and the function is safe under the
+        // dev-mode double invocation — same input, same output.
+        setLayout((latest) => {
+          // The promote timer captured `v[col]` (the dish that *was*
+          // on this column when the swap started) and `incoming`.
+          // If `latest` has moved on, this swap is stale — the
+          // column has already been swapped to something else, and
+          // our promote has nothing to land on. Bail with the same
+          // reference so React skips the commit.
+          const stillOurSwap =
+            latest.visible[col] === v[col] && latest.pool[poolIdx] === incoming;
+          if (!stillOurSwap) return latest;
+          const nextVisible = latest.visible.slice();
+          const nextPool = latest.pool.slice();
+          nextVisible[col] = incoming;
+          nextPool[poolIdx] = v[col];
+          return { visible: nextVisible, pool: nextPool };
+        });
+      }, FADE_MS);
+      promoteTimers.add(promote);
+    }, SWAP_MS);
+
+    return () => {
+      window.clearInterval(id);
+      for (const t of promoteTimers) window.clearTimeout(t);
+      inFlightRef.current = false;
+    };
+  }, []);
+
+  return (
+    <motion.div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-0"
+      style={{ y }}
+    >
+      <div className="grid h-full grid-cols-2 md:grid-cols-4">
+        {visible.map((dishIdx, i) => (
+          <MosaicColumn
+            key={i}
+            dish={featuredDishes[dishIdx]!}
+            columnIndex={i}
+            driftKey={DRIFT[i]}
+            priority={i === 0}
+            overlay={
+              overlay?.col === i
+                ? featuredDishes[overlay.incoming] ?? null
+                : null
+            }
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+});
+
+/* ------------------------------------------------------------------
+   One column of the mosaic.
+
+   The base image is always mounted — its `src` only changes once a
+   crossfade has fully completed, so the panel is never blank. When
+   the column receives an `overlay`, that second image mounts
+   absolutely on top and fades from 0 → 1 over `FADE_MS`. The
+   overlay unmounts once its fade is done; the base then takes over
+   with the new src.
+------------------------------------------------------------------- */
+
+interface MosaicColumnProps {
+  dish: FeaturedDish;
+  columnIndex: number;
+  driftKey: (typeof DRIFT)[number];
+  priority: boolean;
+  overlay: FeaturedDish | null;
+}
+
+function MosaicColumn({
+  dish,
+  columnIndex,
+  driftKey,
+  priority,
+  overlay,
+}: MosaicColumnProps) {
+  return (
+    <div
+      className="relative overflow-hidden border-l border-line first:border-l-0"
+      data-hero-column={columnIndex}
+    >
+      {/* The base image — always mounted, only its `src` changes when a
+          swap promotes. No `key` on purpose: keeping the DOM element
+          identity stable means the drift CSS animation plays
+          continuously, with no restart tick when the swap lands. */}
+      <Image
+        src={dish.imageUrl}
+        alt=""
+        fill
+        {...(priority
+          ? { priority: true }
+          : { loading: "eager" as const })}
+        sizes="(min-width: 768px) 25vw, 50vw"
+        {...(dish.blurDataUrl
+          ? { placeholder: "blur" as const, blurDataURL: dish.blurDataUrl }
+          : { placeholder: "empty" as const })}
+        className={`hero-panel__img hero-panel__img--${driftKey} object-cover`}
+        style={{ objectPosition: dish.focal ?? "50% 50%" }}
+      />
+
+      {/* The overlay image — mounted only during a crossfade. The
+          motion `key` on the wrapping div re-mounts on every new
+          overlay so the fade plays from scratch, and the linear ease
+          keeps the blend a constant rate rather than an "ease-in then
+          slow-down" reveal. The overlay never gets the drift class:
+          it is short-lived and the drift would stack with the fade
+          into a confused composite. */}
+      {overlay && (
+        <motion.div
+          key={overlay.imageUrl}
+          className="absolute inset-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: FADE_MS / 1000, ease: "linear" }}
+        >
+          <Image
+            src={overlay.imageUrl}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 25vw, 50vw"
+            {...(overlay.blurDataUrl
+              ? { placeholder: "blur" as const, blurDataURL: overlay.blurDataUrl }
+              : { placeholder: "empty" as const })}
+            className="object-cover"
+            style={{ objectPosition: overlay.focal ?? "50% 50%" }}
+          />
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------
+   The unified dark vignette. A single ramp covering the whole grid
+   so the type below clears AA on every frame, on every strip. The
+   drift happens behind the ramp; the ramp does not move.
+------------------------------------------------------------------- */
+
+function HeroVignette() {
+  return (
+    <div
+      aria-hidden="true"
+      className="hero-vignette pointer-events-none absolute inset-0 z-10"
+    />
   );
 }

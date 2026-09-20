@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/ui/ActionButton";
-import { CONTACT } from "@/lib/constants/site";
+import { WHATSAPP_ORDER_HREF } from "@/lib/constants/site";
 
 /**
  * OrderOnline — a 50/50 split, the loudest call to action on the page.
@@ -35,17 +35,6 @@ import { CONTACT } from "@/lib/constants/site";
  */
 
 const SWIGGY_HREF = "https://www.swiggy.com/menu/1355572?source=sharing";
-
-/** A pre-filled WhatsApp message for the in-house delivery route. */
-const DELIVERY_INQUIRY =
-  "Hi Hotel Bagheecha! I'd like to order in — please share today's menu and delivery times.";
-
-const WHATSAPP_DELIVERY_HREF = CONTACT.whatsapp.href.replace(
-  encodeURIComponent(
-    "Hi Hotel Bagheecha! I'd like to enquire about booking a table. Date, time and number of guests:",
-  ),
-  encodeURIComponent(DELIVERY_INQUIRY),
-);
 
 const HEADING =
   "font-display text-[clamp(1.75rem,3.4vw,2.75rem)] font-normal leading-[1.05] tracking-[-0.02em]";
@@ -81,7 +70,7 @@ export function OrderOnline() {
             <div>
               <ActionButton
                 href={SWIGGY_HREF}
-                variant="outline"
+                variant="secondary"
                 size="lg"
                 external
                 className="w-full justify-center sm:w-auto"
@@ -114,8 +103,8 @@ export function OrderOnline() {
 
             <div>
               <ActionButton
-                href={WHATSAPP_DELIVERY_HREF}
-                variant="outline"
+                href={WHATSAPP_ORDER_HREF}
+                variant="secondary"
                 size="lg"
                 external
                 className="w-full justify-center sm:w-auto"
