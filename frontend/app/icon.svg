@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Hotel Bagheecha">
+  <!--
+    Brand mark: cream asterisk on deep plum. Mirrors the hero wordmark
+    bagheecha* at zoom level 0; the asterisk is the only piece of the
+    mark that survives 16x16, so it carries the brand on its own.
+
+    Tokens
+      ground    plum   #240B14  (dark token from app/globals.css)
+      mark      cream  #F9F6F0  (light token from app/globals.css)
+
+    Geometry
+      Six rays from the centre in a typography-asterisk arrangement
+      (vertical plus an X). Stroke-width is tuned so the cream reads
+      cleanly at favicon scale without fusing into a blob at 16x16.
+
+      The mark is inset by ~7 px so a tab chrome never reads the cream
+      as touching the plum edge. Rounded caps keep each ray from
+      looking like a blade, which is what would make it read as a
+      star or weapon rather than a luxury hotel mark.
+  -->
+  <rect width="32" height="32" fill="#240B14" />
+  <g
+    stroke="#F9F6F0"
+    stroke-width="2.4"
+    stroke-linecap="round"
+    fill="none"
+    transform="translate(16 16)"
+  >
+    <line x1="0" y1="-9" x2="0" y2="9" />
+    <line x1="-7.794" y1="-4.5" x2="7.794" y2="4.5" />
+    <line x1="-7.794" y1="4.5" x2="7.794" y2="-4.5" />
+  </g>
+</svg>

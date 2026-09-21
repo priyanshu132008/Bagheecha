@@ -1,15 +1,48 @@
 import type { StaticImageData } from "next/image";
 
 import acFineDining from "@/public/images/ac-fine-dining.jpeg";
+import atmosAc from "@/public/images/atmos-ac.jpeg";
+import atmosRooftop from "@/public/images/atmos-rooftop.jpeg";
 import barBackwallWide from "@/public/images/bar-backwall-wide.jpeg";
 import barCocktailMixers from "@/public/images/bar-cocktail-mixers.jpeg";
 import barJaliBackwall from "@/public/images/bar-jali-backwall.jpeg";
 import barSpiritsShelf from "@/public/images/bar-spirits-shelf.jpeg";
+import bottleAbsolut from "@/public/images/bottle-absolut.jpeg";
+import bottleBacardiBlack from "@/public/images/bottle-bacardi-black.jpeg";
+import bottleBacardiLimon from "@/public/images/bottle-bacardi-limon.jpeg";
+import bottleBacardiWhite from "@/public/images/bottle-bacardi-white.jpeg";
+import bottleBallantines from "@/public/images/bottle-ballantines.jpeg";
+import bottleBlendersPride from "@/public/images/bottle-blenders-pride.jpeg";
+import bottleBlueRibandGin from "@/public/images/bottle-blue-riband-gin.jpeg";
+import bottleBlueRiband from "@/public/images/bottle-blue-riband.jpeg";
+import bottleBombaySapphire from "@/public/images/bottle-bombay-sapphire.jpeg";
+import bottleBudweiserMagnum from "@/public/images/bottle-budweiser-magnum.jpeg";
+import bottleBudweiserMild from "@/public/images/bottle-budweiser-mild.jpeg";
+import bottleCarlsbergElephant from "@/public/images/bottle-carlsberg-elephant.jpeg";
+import bottleCarlsbergMild from "@/public/images/bottle-carlsberg-mild.jpeg";
+import bottleDiaRed from "@/public/images/bottle-dia-red.jpeg";
+import bottleDiaWhite from "@/public/images/bottle-dia-white.jpeg";
+import bottleGlenwalk from "@/public/images/bottle-glenwalk.jpeg";
+import bottleJameson from "@/public/images/bottle-jameson.jpeg";
+import bottleKingfisherUltra from "@/public/images/bottle-kingfisher-ultra.jpeg";
+import bottleMcdowellNo1 from "@/public/images/bottle-mcdowell-no1.jpeg";
+import bottleOaksmith from "@/public/images/bottle-oaksmith.jpeg";
+import bottleRomanov from "@/public/images/bottle-romanov.jpeg";
+import bottleRoyalStagBarrel from "@/public/images/bottle-royal-stag-barrel.jpeg";
+import bottleRoyalStag from "@/public/images/bottle-royal-stag.jpeg";
+import bottleSignature from "@/public/images/bottle-signature.jpeg";
+import bottleSmirnoff from "@/public/images/bottle-smirnoff.jpeg";
+import bottleSulaRed from "@/public/images/bottle-sula-red.jpeg";
+import bottleTuborgStrong from "@/public/images/bottle-tuborg-strong.jpeg";
 import classicDiningNonAc from "@/public/images/classic-dining-nonac.jpeg";
 import dishButterChicken from "@/public/images/dish-butter-chicken.jpeg";
 import dishChilliChicken from "@/public/images/dish-chilli-chicken.jpeg";
 import dishFriedRice from "@/public/images/dish-fried-rice.jpeg";
+import dishPaneerTikka from "@/public/images/dish-paneer-tikka.jpeg";
+import dishPapdiChaat from "@/public/images/dish-papdi-chaat.jpeg";
+import dishPrawnsTawa from "@/public/images/dish-prawns-tawa.jpeg";
 import dishSesameChicken from "@/public/images/dish-sesame-chicken.jpeg";
+import dishTandooriChicken from "@/public/images/dish-tandoori-chicken.jpeg";
 import terracePanorama from "@/public/images/terrace-panorama.jpeg";
 import terraceUnderRoof from "@/public/images/terrace-under-roof.jpeg";
 
@@ -94,22 +127,16 @@ export const BAR_IMAGES: Shot[] = [
 ];
 
 /* ------------------------------------------------------------------
-   The kitchen — four plates off the printed card.
+   The kitchen — eight plates off the printed card, the hero now
+   crossfading through all of them.
 
-   These are the only photographs in the project of *food*, as opposed to
-   of rooms, and they arrived last: the property shot its own dishes and
-   sent them in. Four frames, four real orders, nothing staged.
+   Four original (chilli chicken, butter chicken, sesame chicken, fried
+   rice) plus four new arrivals: paneer tikka, tandoori chicken, prawns
+   tawa, and papdi chaat — the second pass of the property's own food
+   photography.
 
-   WHY FOUR AND NOT TWENTY-TWO. The food card carries 22 printed groups
-   and well over three hundred lines. Photographing all of it is a menu
-   redesign, not a page change, and illustrating a price list is how a
-   restaurant site turns into a delivery app. So these four are the
-   *preview*: one plate per chapter of the book, shown once, above it.
-
-   `orientation` here is genuinely mixed (640x960, 736x1308, 736x981,
-   736x736) which is what the `shot()` helper derives it for — the
-   editorial band crops them to one ratio, so the source ratio only
-   matters to whoever reaches for a single frame later.
+   The hero's two-cinematic crossfade uses all eight; the editorial
+   band on the kitchen card keeps four to match the book's chapters.
 ------------------------------------------------------------------- */
 
 export const FEATURED_DISHES: Shot[] = [
@@ -139,6 +166,47 @@ export const FEATURED_DISHES: Shot[] = [
   }),
 ];
 
+/** The four new food photographs, for the hero's extended rotation. */
+export const NEW_DISHES: Shot[] = [
+  shot(dishPaneerTikka, {
+    alt: "Skewers of paneer tikka on a wooden board, charred at the edges with grilled peppers and red onion, beside a bowl of mint chutney and a lime.",
+    label: "Paneer Tikka",
+    caption: "Skewered, charred, finished with mint chutney.",
+    zone: "kitchen",
+  }),
+  shot(dishTandooriChicken, {
+    alt: "Tandoori chicken pieces in a terracotta bowl, deep red with char marks, served on a banana leaf with sliced onion rings and green chutney.",
+    label: "Tandoori Chicken",
+    caption: "Clay-oven red, charred at the edges.",
+    zone: "kitchen",
+  }),
+  shot(dishPrawnsTawa, {
+    alt: "Spiced prawns tossed with dried red chillies and curry leaves in a black cast-iron pan on a rustic wooden board.",
+    label: "Prawns Tawa Fry",
+    caption: "Wok-tossed with whole red chilli and curry leaf.",
+    zone: "kitchen",
+  }),
+  shot(dishPapdiChaat, {
+    alt: "Papdi chaat on a white oval plate — crisp wafers layered with yoghurt, tamarind and mint chutneys, sev, pomegranate and diced tomato and onion.",
+    label: "Papdi Chaat",
+    caption: "Crisp wafers, three chutneys, fresh pomegranate.",
+    zone: "kitchen",
+  }),
+];
+
+/**
+ * Eight frames for the hero's cinematic crossfade.
+ *
+ * The first four are the originals and stay `priority`-loaded; the four
+ * new plates are `loading="eager"` because the crossfade reaches them
+ * inside a few seconds and lazy would mean a blank panel during the
+ * first rotation.
+ */
+export const HERO_CROSSFADE_DISHES: Shot[] = [
+  ...FEATURED_DISHES,
+  ...NEW_DISHES,
+];
+
 /* ------------------------------------------------------------------
    The three seating zones.
 ------------------------------------------------------------------- */
@@ -151,6 +219,20 @@ export const TERRACE_IMAGES: Shot[] = [
     zone: "terrace",
     focal: "50% 60%",
   }),
+  shot(atmosRooftop, {
+    /*
+     * The Atmospheres lead shot for the terrace — a tighter, more
+     * editorial crop of the same roof, swapped in 2026-09-20 for the
+     * older `terraceUnderRoof` frame. Replaces the source the pinned
+     * caption in `Atmospheres.tsx` reads; the older file stays in the
+     * registry because the kitchen book still carries it.
+     */
+    alt: "The terrace under a timber roof at last light: yellow-topped tables, ceiling fans, and the canopy of palms beyond the railing.",
+    label: "Under the Roof",
+    caption: "Covered, fan-cooled, and open on every side.",
+    zone: "terrace",
+    focal: "50% 45%",
+  }),
   shot(terraceUnderRoof, {
     alt: "Beneath the terrace roof: timber beams, ceiling fans and yellow-topped tables, with palm groves visible through the open sides.",
     label: "Under the Roof",
@@ -161,6 +243,19 @@ export const TERRACE_IMAGES: Shot[] = [
 ];
 
 export const AC_DINING_IMAGES: Shot[] = [
+  shot(atmosAc, {
+    /*
+     * The Atmospheres lead shot for the AC room — a tighter editorial
+     * crop of the booth wall, swapped in 2026-09-20 for the older
+     * `acFineDining` frame. `acFineDining` stays in the registry for
+     * any other consumer that referenced it.
+     */
+    alt: "The air-conditioned fine dining room: a long banquette in brown leather set against grilled windows, soft warm light from pendant lamps above each table.",
+    label: "AC Fine Dining",
+    caption: "Cool air, deep booths, and room for the whole family.",
+    zone: "ac",
+    focal: "50% 55%",
+  }),
   shot(acFineDining, {
     alt: "The air-conditioned fine dining room: brown banquette booths beside a grilled window, a wall-mounted air conditioner, ceiling fans and dark laminate tables.",
     label: "AC Fine Dining",
@@ -179,6 +274,249 @@ export const NON_AC_IMAGES: Shot[] = [
     focal: "50% 60%",
   }),
 ];
+
+/* ------------------------------------------------------------------
+   The bar's "top three" bottles — the polaroid collage on the bar
+   menu's left rail.
+
+   Each list gets three photographs, chosen by the menu as its leading
+   names: the bottles whose presence on the back bar is the visual proof
+   that this list is *that* list. Vodka gets Smirnoff, Romanov and
+   Absolut; whisky gets its own trio per tier — the page reads
+   category-by-category and the collage slides with it.
+------------------------------------------------------------------- */
+
+export type BottleId =
+  | "smirnoff"
+  | "romanov"
+  | "absolut"
+  | "signature"
+  | "blenders-pride"
+  | "royal-stag-barrel"
+  | "glenwalk"
+  | "ballantines"
+  | "jameson"
+  | "oaksmith"
+  | "royal-stag"
+  | "mcdowell-no1"
+  | "bacardi-limon"
+  | "bacardi-white"
+  | "bacardi-black"
+  | "blue-riband"
+  | "bombay-sapphire"
+  | "dia-red"
+  | "sula-red"
+  | "dia-white"
+  | "budweiser-mild"
+  | "carlsberg-mild"
+  | "kingfisher-ultra"
+  | "budweiser-magnum"
+  | "carlsberg-elephant"
+  | "tuborg-strong";
+
+export type Bottle = {
+  /** Stable id, used as the React key. */
+  id: BottleId;
+  src: StaticImageData;
+  /** Brand name as printed on the bottle — the only label that matters. */
+  brand: string;
+  /** The liquid's surface tone, for the back-of-collage tint. */
+  tone: "clear" | "amber" | "dark" | "green" | "ruby";
+};
+
+/**
+ * The full registry of bottles. The bar's `BAR_BOTTLES` map keys into
+ * this — `BAR_BOTTLES.vodka[0]` is the first of the three the polaroid
+ * collage shows on the vodka section, and so on. Re-using the same
+ * source across categories (e.g. the strong-beer trio is the only beer
+ * photography the property sent) is honest about the source material:
+ * it is what was actually shot, and a category that the bar keeps
+ * without its own portrait frame should not be invented one.
+ */
+export const BOTTLES: Record<BottleId, Bottle> = {
+  smirnoff: {
+    id: "smirnoff",
+    src: bottleSmirnoff,
+    brand: "Smirnoff",
+    tone: "clear",
+  },
+  romanov: {
+    id: "romanov",
+    src: bottleRomanov,
+    brand: "Romanov",
+    tone: "clear",
+  },
+  absolut: {
+    id: "absolut",
+    src: bottleAbsolut,
+    brand: "Absolut",
+    tone: "clear",
+  },
+  signature: {
+    id: "signature",
+    src: bottleSignature,
+    brand: "Signature",
+    tone: "green",
+  },
+  "blenders-pride": {
+    id: "blenders-pride",
+    src: bottleBlendersPride,
+    brand: "Blenders Pride",
+    tone: "amber",
+  },
+  "royal-stag-barrel": {
+    id: "royal-stag-barrel",
+    src: bottleRoyalStagBarrel,
+    brand: "Royal Stag Barrel",
+    tone: "amber",
+  },
+  glenwalk: {
+    id: "glenwalk",
+    src: bottleGlenwalk,
+    brand: "Glenwalk",
+    tone: "amber",
+  },
+  ballantines: {
+    id: "ballantines",
+    src: bottleBallantines,
+    brand: "Ballantines",
+    tone: "amber",
+  },
+  jameson: {
+    id: "jameson",
+    src: bottleJameson,
+    brand: "Jameson",
+    tone: "amber",
+  },
+  oaksmith: {
+    id: "oaksmith",
+    src: bottleOaksmith,
+    brand: "Oaksmith Silver",
+    tone: "amber",
+  },
+  "royal-stag": {
+    id: "royal-stag",
+    src: bottleRoyalStag,
+    brand: "Royal Stag",
+    tone: "amber",
+  },
+  "mcdowell-no1": {
+    id: "mcdowell-no1",
+    src: bottleMcdowellNo1,
+    brand: "McDowell No.1",
+    tone: "amber",
+  },
+  "bacardi-limon": {
+    id: "bacardi-limon",
+    src: bottleBacardiLimon,
+    brand: "Bacardi Limón",
+    tone: "clear",
+  },
+  "bacardi-white": {
+    id: "bacardi-white",
+    src: bottleBacardiWhite,
+    brand: "Bacardi White",
+    tone: "clear",
+  },
+  "bacardi-black": {
+    id: "bacardi-black",
+    src: bottleBacardiBlack,
+    brand: "Bacardi Black",
+    tone: "dark",
+  },
+  "blue-riband": {
+    id: "blue-riband",
+    src: bottleBlueRiband,
+    brand: "Blue Riband",
+    tone: "clear",
+  },
+  "bombay-sapphire": {
+    id: "bombay-sapphire",
+    src: bottleBombaySapphire,
+    brand: "Bombay Sapphire",
+    tone: "clear",
+  },
+  "dia-red": {
+    id: "dia-red",
+    src: bottleDiaRed,
+    brand: "Dia Red",
+    tone: "ruby",
+  },
+  "sula-red": {
+    id: "sula-red",
+    src: bottleSulaRed,
+    brand: "Sula Red",
+    tone: "ruby",
+  },
+  "dia-white": {
+    id: "dia-white",
+    src: bottleDiaWhite,
+    brand: "Dia White",
+    tone: "clear",
+  },
+  "budweiser-mild": {
+    id: "budweiser-mild",
+    src: bottleBudweiserMild,
+    brand: "Budweiser Mild",
+    tone: "amber",
+  },
+  "carlsberg-mild": {
+    id: "carlsberg-mild",
+    src: bottleCarlsbergMild,
+    brand: "Carlsberg Mild",
+    tone: "green",
+  },
+  "kingfisher-ultra": {
+    id: "kingfisher-ultra",
+    src: bottleKingfisherUltra,
+    brand: "Kingfisher Ultra",
+    tone: "green",
+  },
+  "budweiser-magnum": {
+    id: "budweiser-magnum",
+    src: bottleBudweiserMagnum,
+    brand: "Budweiser Magnum",
+    tone: "amber",
+  },
+  "carlsberg-elephant": {
+    id: "carlsberg-elephant",
+    src: bottleCarlsbergElephant,
+    brand: "Carlsberg Elephant",
+    tone: "green",
+  },
+  "tuborg-strong": {
+    id: "tuborg-strong",
+    src: bottleTuborgStrong,
+    brand: "Tuborg Strong",
+    tone: "green",
+  },
+} as const;
+
+/**
+ * The two or three bottles the polaroid collage shows per bar category.
+ *
+ * Keyed by `BarCategory["id"]`. Most categories carry three — the names
+ * the user explicitly chose from the photographed shelf — and the key
+ * list is the same list `BAR` iterates in, so the rail slides in the
+ * same order as the lists do. Gin carries only two because the printed
+ * card lists only two: padding the trio would be a phantom bottle that
+ * does not exist on the page.
+ */
+export type BarBottleTrio =
+  | readonly [BottleId, BottleId, BottleId]
+  | readonly [BottleId, BottleId];
+
+export const BAR_BOTTLES: Record<string, BarBottleTrio> = {
+  vodka: ["smirnoff", "romanov", "absolut"],
+  "premium-whisky": ["signature", "blenders-pride", "royal-stag-barrel"],
+  scotch: ["glenwalk", "ballantines", "jameson"],
+  "regular-whisky": ["oaksmith", "royal-stag", "mcdowell-no1"],
+  rum: ["bacardi-limon", "bacardi-white", "bacardi-black"],
+  gin: ["blue-riband", "bombay-sapphire"],
+  wine: ["dia-red", "sula-red", "dia-white"],
+  "mild-beer": ["budweiser-mild", "carlsberg-mild", "kingfisher-ultra"],
+  "strong-beer": ["budweiser-magnum", "carlsberg-elephant", "tuborg-strong"],
+} as const;
 
 /* ------------------------------------------------------------------
    Composed collections, in the order the page consumes them.
@@ -231,4 +569,5 @@ export const ALL_IMAGES: Shot[] = [
   ...NON_AC_IMAGES,
   ...BAR_IMAGES,
   ...FEATURED_DISHES,
+  ...NEW_DISHES,
 ];

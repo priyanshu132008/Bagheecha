@@ -1,0 +1,14 @@
+-- seed.sql — kept empty.
+--
+-- The CLI seed runner is SQL-only; the actual seed logic lives in
+-- `supabase/seed.ts` because it imports the TypeScript constants
+-- from `lib/constants/menu.ts` (the file is the source of truth and
+-- must be deleted before redeclaring a dish name).
+--
+-- To run the seed:
+--   npx tsx supabase/seed.ts
+--
+-- The script is idempotent: it wipes the four menu tables and the
+-- profiles table, then re-inserts everything from the constants file.
+--
+-- Migrations + this file run on `npx supabase db reset`.
