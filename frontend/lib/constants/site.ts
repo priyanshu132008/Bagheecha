@@ -255,3 +255,29 @@ export const ZONES = [
 ] as const;
 
 export type ZoneId = (typeof ZONES)[number]["id"];
+
+/* ------------------------------------------------------------------
+   Section typography tokens
+
+   The closing chapters (`#visit`, `#reserve`) share a display heading
+   scale and a single restrained lede. They live here so the
+   closing-pair reads as one book without two components owning their
+   own copies of the same string — a rename in one place, both
+   sections pick it up.
+
+   Turn 10: lifted from `app/page.tsx` (where they were inline) so the
+   new `<Reserve />` section can share them without a
+   copy-and-paste of the className strings.
+------------------------------------------------------------------- */
+
+/** Closing-chapter display heading. `text-4xl` on phones, `text-5xl`
+ *  from `md`. Tight `tracking-[-0.02em]` and `leading-[1.05]` keep the
+ *  display face legible at the smaller size without losing the
+ *  editorial feel. */
+export const H2_MASSIVE =
+  "font-display text-4xl font-normal leading-[1.05] tracking-[-0.02em] text-ink md:text-5xl";
+
+/** Closing-chapter lede — `max-w-xl` so a long sentence never spans
+ *  the whole rail, `text-[15px] leading-7` so the body keeps the
+ *  page's reading rhythm at the smaller closing-chapter size. */
+export const LEDE = "max-w-xl text-pretty text-[15px] leading-7 text-ink-muted";

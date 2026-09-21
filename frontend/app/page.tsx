@@ -6,10 +6,11 @@ import Atmospheres from "@/components/sections/Atmospheres";
 import Hero from "@/components/sections/Hero";
 import Menu from "@/components/sections/Menu";
 import { OrderOnline } from "@/components/sections/OrderOnline";
+import Reserve from "@/components/sections/Reserve";
 import { ReviewsCards } from "@/components/sections/ReviewsCards";
 import { ActionButton } from "@/components/ui/ActionButton";
 import MobileActionBar from "@/components/ui/MobileActionBar";
-import { CONTACT, LOCATION, WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
+import { CONTACT, H2_MASSIVE, LEDE, LOCATION, WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
 import { getFeaturedDishes } from "@/lib/menu/queries";
 
 /**
@@ -122,19 +123,10 @@ function WideSection({
 }
 
 /**
- * The display sizes the closing chapters share.
- *
- * Phase 6 brought these down from the wordmark scale (`clamp(2.5rem,
- * 7.2vw, 6.5rem)`) to a refined editorial size (`text-4xl md:text-5xl`).
- * The earlier gigantism was making the bottom of the page read as a
- * billboard instead of a closing chapter — a 6.5rem heading is the
- * right size for a hero, not for a section that sits next to a phone
- * number a guest is trying to dial. Tight `tracking-[-0.02em]` keeps
- * the display face legible at the smaller size without losing the
- * editorial feel.
+ * The display sizes the closing chapters share — now imported from
+ * `lib/constants/site.ts` so both `#visit` and `<Reserve />` consume
+ * the same string. See `site.ts` for the rationale.
  */
-const H2_MASSIVE =
-  "font-display text-4xl font-normal leading-[1.05] tracking-[-0.02em] text-ink md:text-5xl";
 
 /**
  * The contact-row typography. Closing-chapter contact rows get the
@@ -144,8 +136,6 @@ const H2_MASSIVE =
  */
 const ROW =
   "font-display text-2xl leading-tight text-ink md:text-[1.7rem]";
-
-const LEDE = "max-w-xl text-pretty text-[15px] leading-7 text-ink-muted";
 
 export default async function Home() {
   /**
@@ -295,49 +285,16 @@ export default async function Home() {
         </WideSection>
 
         {/* --------------------------------------------------------------
-            Reserve — Phase 3 lands the booking flow here. Same wider
-            rail as `#visit` so the closing pair read as one book.
+            Reserve — Turn 10 polish. The closing-pair rail (column 2)
+            stays so `#visit` and `#reserve` read as one book, and the
+            heading / lede reveal in the same rhythm the rest of the
+            page uses. What changed is what lives under the lede: a
+            client-side form collects Name / Guests / Date / Time /
+            Seating, validates inline, and launches WhatsApp with a
+            freshly-composed message via the existing `waLink()`
+            helper. See `components/sections/Reserve.tsx`.
         --------------------------------------------------------------- */}
-        <WideSection id="reserve" eyebrow="Reservations">
-          <h2 className={H2_MASSIVE}>
-            <MaskReveal className="text-balance">
-              Save your table.
-            </MaskReveal>
-          </h2>
-
-          <MaskReveal delay={0.12} duration={0.9}>
-            <p className={`mt-6 ${LEDE}`}>
-              Tell us the date, the time and how many are coming, and we will
-              hold it — terrace, AC room, or the classic dining hall. A table
-              for two and a party of twenty are the same phone call.
-            </p>
-          </MaskReveal>
-
-          {/* The only solid button this far down the page. By the time
-              this is on screen the hero's is long gone, so it is still
-              the single high-contrast element in view. */}
-          <MaskReveal delay={0.24} duration={0.9}>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <ActionButton
-                href={WHATSAPP_RESERVATION_HREF}
-                size="lg"
-                external
-                className="w-full justify-center sm:w-auto"
-              >
-                Reserve on WhatsApp
-              </ActionButton>
-              <ActionButton
-                href={CONTACT.call.href}
-                variant="secondary"
-                size="lg"
-                cursor="hover"
-                className="w-full justify-center sm:w-auto"
-              >
-                Call the Hotel
-              </ActionButton>
-            </div>
-          </MaskReveal>
-        </WideSection>
+        <Reserve />
       </main>
 
       <MobileActionBar />
