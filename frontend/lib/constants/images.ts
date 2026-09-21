@@ -267,7 +267,19 @@ export const AC_DINING_IMAGES: Shot[] = [
 
 export const NON_AC_IMAGES: Shot[] = [
   shot(classicDiningNonAc, {
-    alt: "The classic non-air-conditioned dining room: brown booth seating on a marble floor, cream walls with red butterfly decals, and ceiling fans overhead.",
+    /*
+     * POLISH BRIEF (2026-09-21): the source photograph was swapped for
+     * a higher-resolution frame (926×1350, replacing the previous
+     * 720×1280). The semantic name on disk — `classic-dining-nonac` —
+     * is preserved so the e2e regex in `atmospheres.spec.ts` (line
+     * 269, `classic-dining-nonac`) and every consumer of the import
+     * alias (`classicDiningNonAc`) keep resolving without a code
+     * change. The alt text was rewritten to describe the new
+     * photograph — brown booth seating, dark marble-topped tables,
+     * grilled windows with greenery beyond, and ceiling fans under a
+     * red-trimmed ceiling.
+     */
+    alt: "The classic non-air-conditioned dining room: brown booth seating at dark marble-topped tables, grilled windows with greenery beyond, and a ceiling fan under a red-trimmed ceiling.",
     label: "Classic Dining",
     caption: "The everyday room — quick lunches and big groups.",
     zone: "nonac",
