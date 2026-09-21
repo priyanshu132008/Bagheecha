@@ -5,6 +5,16 @@
  * the hotel as a `Restaurant` per schema.org. The block is rendered
  * inside `<head>` from the root layout (see `app/layout.tsx`).
  *
+ * SEO BRIEF (2026-09-21): the JSON-LD schema is the single most
+ * useful surface for ranking — Google's rich-results picker reads
+ * it directly for the knowledge panel, for cuisine filters, for
+ * price-range filters, and for "place a reservation" actions. The
+ * metadata block in `app/layout.tsx` and the JSON-LD block here are
+ * written together: same `name`, same `description`, same `image`,
+ * same `url`. They are not the same thing — `keywords` does not
+ * belong in JSON-LD (Google ignores it there too, and Bing's parser
+ * actually warns against it), and the description is *not* a tagline.
+ *
  * FIELDS
  *   Only fields with a non-empty value are emitted. This is Rule #1 of
  *   the brief — never invent facts; the owner fills the `SITE` object
@@ -12,8 +22,7 @@
  *   values as they arrive. An empty string today means "field omitted
  *   from the schema", not "field rendered as blank".
  *
- *   Two non-optional fields are hard-coded with the public facts that
- *   are already known to be true and that the brief mandates:
+ *   Non-optional fields hard-coded with public facts:
  *
  *     - `@context`            : "https://schema.org"
  *     - `@type`               : "Restaurant"
@@ -23,22 +32,21 @@
  *                            regardless of owner-fact progress.
  *     - `servesCuisine`       : ["Indian", "Chinese", "Tandoor"] — the
  *                            three cuisines the menu carries today.
- *                            Owner can refine.
  *     - `image`               : `/opengraph-image` — the build-time
  *                            generated PNG from `app/opengraph-image.tsx`.
  *     - `url`                 : site root.
  *     - `telephone`           : from `CONTACT.call.display` (+91 …).
  *     - `acceptsReservations` : "true" — yes, on WhatsApp or by phone.
+ *     - `priceRange`          : "₹₹" — moderate. Google uses this to
+ *                            filter "cheap eats" vs "mid-range" vs
+ *                            "fine dining" SERPs.
  *
  *   Owner-provided fields (omitted when empty):
  *     - `address.streetAddress`  (two lines)
- *     - `address.addressCountry` (derived: "IN" when any address
- *                                 fragment is present)
  *     - `address.postalCode`
  *     - `geo`                    (latitude/longitude — TODO(owner))
  *     - `openingHoursSpecification`
  *     - `aggregateRating`
- *     - `priceRange`
  *     - `hasMenu`                (URL to /menus when present)
  *     - `paymentAccepted`
  *     - `accessibilityFeature`
@@ -79,6 +87,17 @@ const SITE_URL =
    later; this is a safe starter set. */
 const CUISINES = ["Indian", "Chinese", "Tandoor"];
 
+/**
+ * The schema's `description` — kept in lockstep with the
+ * `metadata.description` in `app/layout.tsx` so a search result's
+ * snippet (sourced from the meta description) and the knowledge
+ * panel (sourced from the JSON-LD description) read as the same
+ * paragraph to a human. The two must move together; if one
+ * changes, both change.
+ */
+const SCHEMA_DESCRIPTION =
+  "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables. Reserve on WhatsApp.";
+
 export default function RestaurantJsonLd() {
   /* Build the street address from the two address lines, dropping
      anything blank. Same shape every Google Maps URL expects. */
@@ -101,6 +120,7 @@ export default function RestaurantJsonLd() {
     "@context": "https://schema.org",
     "@type": "Restaurant",
     name: LOCATION.name,
+    description: SCHEMA_DESCRIPTION,
     image: [`${SITE_URL}/opengraph-image`],
     url: `${SITE_URL}/`,
     telephone: CONTACT.call.display,

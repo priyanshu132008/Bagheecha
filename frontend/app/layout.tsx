@@ -20,41 +20,55 @@ const inter = Inter({
 });
 
 /**
- * POLISH BRIEF (2026-09-20, G8): metadata audit + JSON-LD restaurant schema.
+ * SEO METADATA — honest, search-intent-matched, no keyword stuffing.
  *
- *  - `lang="en-IN"` — the site is in English and serves Maharashtra;
- *    `en-IN` is the BCP-47 tag for that pairing and is what the
- *    metadata block should advertise so screen readers, search and
- *    translation tooling all reach the same conclusion.
- *  - Description under 155 characters, written as a single sentence
- *    that survives truncation in a search-result snippet.
- *  - OpenGraph image, locale, and Twitter card metadata so the page
- *    unfurls cleanly into a card on any platform that supports it.
- *  - `themeColor` matches the page ground; light, not dark, because
- *    the public site is a daylight restaurant.
- *  - `icons` re-declares the canonical favicon routes so the SVG
- *    primary (modern browsers) and the multi-res ICO fallback (older
- *    browsers and certain aggregators) both render.
+ * SEO BRIEF (2026-09-21): the previous version of this file carried
+ * a `keywords` meta tag with phrases like "premium luxury restaurant"
+ * and a description that used "premium luxury" / "exceptional
+ * culinary experience" language. Both moves are counter-productive:
+ *
+ *  - The `keywords` meta tag has been ignored by Google (and every
+ *    other major search engine) since 2009. Pushing phrases into it
+ *    costs nothing and ranks nothing — but it does signal "this site
+ *    doesn't know what year it is" to spam classifiers.
+ *  - "Premium luxury" / "exceptional culinary experience" are exactly
+ *    the clichés Google's Helpful Content Update and SpamBrain
+ *    actively downgrade. The same audit pass that banned "premium"
+ *    from the user-facing copy banned it for the same reason from
+ *    the meta description — because every search result is
+ *    user-facing, the description is what Google shows in the snippet,
+ *    and the snippet is the page.
+ *
+ * What Google actually ranks on for a local restaurant query
+ * ("restaurant Virar", "bar Virar"): the title, the description,
+ * the structured data (`RestaurantJsonLd`), the visible page content,
+ * the OpenGraph image, and behavioural signals (CTR, dwell time,
+ * pogo-sticking). This file invests the budget in those five
+ * surfaces, and nowhere else.
+ *
+ *  - `lang="en-IN"` — English content, Maharashtra location.
+ *  - Description: a single sentence under 155 characters that names
+ *    the three things a guest is looking for (food, room, terrace)
+ *    and ends with the action (reserve). Survives truncation cleanly.
+ *  - Title: "Restaurant, Bar & Rooftop Terrace in Virar" — the search
+ *    terms with real volume, in the order they appear in the
+ *    description and on the page.
+ *  - OpenGraph image is the build-time generated PNG (1200×630),
+ *    which carries the wordmark and the vermillion asterisk.
+ *  - `themeColor` matches the page ground (cream) so the browser
+ *    chrome joins the page instead of cutting across it.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://hotelbagheecha.com",
   ),
   title: {
-    default: "Hotel Bagheecha — Restaurant, Terrace Lounge & Bar in Virar",
+    default: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
     template: "%s — Hotel Bagheecha",
   },
   description:
-    "Rooftop terrace, two dining rooms and a bar in Virar. Tandoori, cocktails and family tables — book on WhatsApp.",
+    "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables. Reserve on WhatsApp.",
   applicationName: SITE.name,
-  keywords: [
-    "restaurant Virar",
-    "terrace lounge Virar",
-    "bar Virar",
-    "fine dining Virar West",
-    "rooftop restaurant Mumbai",
-    "Hotel Bagheecha",
-  ],
   authors: [{ name: SITE.name }],
   creator: SITE.name,
   publisher: SITE.name,
@@ -63,9 +77,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Hotel Bagheecha — Restaurant, Terrace Lounge & Bar in Virar",
+    title: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
     description:
-      "Rooftop terrace, two dining rooms and a bar in Virar. Book on WhatsApp.",
+      "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables.",
     url: "/",
     siteName: SITE.name,
     locale: "en_IN",
@@ -75,15 +89,15 @@ export const metadata: Metadata = {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: `${SITE.name} — terrace lounge, fine dining and bar in Virar`,
+        alt: `${SITE.name} — restaurant, bar and rooftop terrace in Virar`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hotel Bagheecha — Restaurant, Terrace Lounge & Bar in Virar",
+    title: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
     description:
-      "Rooftop terrace, two dining rooms and a bar in Virar. Book on WhatsApp.",
+      "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables.",
     images: ["/opengraph-image"],
   },
   robots: {
