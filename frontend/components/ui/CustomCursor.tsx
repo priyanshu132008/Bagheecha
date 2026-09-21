@@ -59,37 +59,60 @@ export default function CustomCursor() {
   const [label, setLabel] = useState<string | null>(null);
 
   /**
-   * Enable gate resolved at mount. `matchMedia` queries are evaluated
-   * synchronously the first time, so the initial render can take the
-   * right branch without an effect-driven `setState` cascade. This is
-   * the form React 19 / Next 16 recommend for media-query gating, and
-   * the `react-hooks/set-state-in-effect` rule explicitly allows it.
+   * Hydration gate.
+   *
+   * THE OLD VERSION READ `window.matchMedia(...)` DURING RENDER. That
+   * works for hydration on a vanilla client — but the moment React 19's
+   * resumable renderer streams the tree, or React re-runs this component
+   * during hydration reconciliation, the server's "no window" answer and
+   * the client's "yes window, yes fine pointer" answer disagree, and the
+   * markup the server emitted no longer matches what the client wants to
+   * emit. React then logs a hydration mismatch on the wrapper `<div>`.
+   *
+   * The fix is the canonical one: render `null` during SSR and the first
+   * client pass, flip `isMounted` in an effect, and only emit the ring
+   * once the effect has run. The cost is a single frame of no-cursor on
+   * hard-load — and on a hard-load there is no cursor to be missing,
+   * because the native cursor is already hidden by `[data-cursor]`
+   * being absent. The ring appears on the first frame after mount and
+   * the native cursor is hidden in the same effect.
    */
-  const finePointer =
-    typeof window !== "undefined" &&
-    window.matchMedia("(pointer: fine)").matches;
-  const reducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const enabled = finePointer && !reducedMotion;
+  const [isMounted, setIsMounted] = useState(false);
 
-  /* ── enable gate (mount + Strict-Mode-cleanup safe) ──────────── */
+  /* ── mount + media-query gate ──────────────────────────────── */
   useEffect(() => {
-    if (!enabled) return;
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    setIsMounted(finePointer && !reducedMotion);
+
+    if (!(finePointer && !reducedMotion)) return;
 
     document.documentElement.dataset.cursor = "tracing";
+    const mql = window.matchMedia("(pointer: fine)");
+
+    /* Coarse-pointer swap (tablet dock, etc). No-op if the new value is
+     * the same — the listener is cheap and the re-render is cheaper
+     * than a hand-rolled diff. */
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsMounted(e.matches);
+    };
+    mql.addEventListener("change", onChange);
+
     return () => {
       delete document.documentElement.dataset.cursor;
       // Strip the CSS variables on cleanup so a subsequent mount with
       // different state does not see stale values.
       document.documentElement.style.removeProperty("--cx");
       document.documentElement.style.removeProperty("--cy");
+      mql.removeEventListener("change", onChange);
     };
-  }, [enabled]);
+  }, []);
 
   /* ── position + mood: event-driven, no loop ─────────────────── */
   useEffect(() => {
-    if (!enabled) return;
+    if (!isMounted) return;
 
     const onMove = (e: PointerEvent) => {
       // Write position directly. CSS variables resolve per element,
@@ -132,9 +155,9 @@ export default function CustomCursor() {
       window.removeEventListener("pointermove", onMove);
       document.documentElement.removeEventListener("pointerleave", onLeave);
     };
-  }, [enabled]);
+  }, [isMounted]);
 
-  if (!enabled) return null;
+  if (!isMounted) return null;
 
   const grow = mood !== "default";
   const glow =
