@@ -8,6 +8,7 @@ import Menu from "@/components/sections/Menu";
 import { OrderOnline } from "@/components/sections/OrderOnline";
 import Reserve from "@/components/sections/Reserve";
 import { ReviewsCards } from "@/components/sections/ReviewsCards";
+import Visit from "@/components/sections/Visit";
 import { ActionButton } from "@/components/ui/ActionButton";
 import MobileActionBar from "@/components/ui/MobileActionBar";
 import { CONTACT, H2_MASSIVE, LEDE, LOCATION, WHATSAPP_RESERVATION_HREF } from "@/lib/constants/site";
@@ -192,97 +193,18 @@ export default async function Home() {
         <OrderOnline />
 
         {/* --------------------------------------------------------------
-            Location — already complete and useful.
-
-            Phase 5 widened this section's content column. The heading
-            is set at the wordmark scale so it carries the page home,
-            and the contact rows are sized as display type so a phone
-            number reads as something you can dial rather than a label
-            you have to squint at. `WideSection` puts the eyebrow on
-            the rail and the content in columns 2–11 — the type can
-            breathe without breaking the page edge.
+            Visit — Turn 11 polish. The closing-pair rail (column 2)
+            stays so `#visit` and `#reserve` read as one book, and the
+            heading / lede reveal in the same rhythm the rest of the
+            page uses. What changed is what lives under the lede: the
+            address, hours and notes are pulled from `SITE.*` and
+            rendered conditionally on `isFilled(...)` (Rule #1: empty
+            fields never paint). Call / WhatsApp collapse into one row
+            with two distinct links, the map iframe is lazy-loaded +
+            desaturated, and the "Get directions" CTA is promoted to
+            `primary`. See `components/sections/Visit.tsx`.
         --------------------------------------------------------------- */}
-        <WideSection id="visit" eyebrow="Find Us">
-          <h2 className={H2_MASSIVE}>
-            <MaskReveal className="text-balance">
-              {LOCATION.name}, {LOCATION.locality}.
-            </MaskReveal>
-          </h2>
-
-          <MaskReveal delay={0.12} duration={0.9}>
-            <p className={`mt-7 ${LEDE}`}>
-              {LOCATION.region}. Directions open straight in your maps app —
-              turn-by-turn from wherever you are.
-            </p>
-          </MaskReveal>
-
-          {/* Contact rows. Hairline-divided rather than a boxed card:
-              a table of ways to reach the hotel is information, and
-              boxing it would make it look like a promotional unit.
-              The row typography is the display face so a phone number
-              reads as information you can dial, not a label.
-
-              ONE NUMBER FOR BOTH VOICE AND WHATSAPP (2026-09-20).
-              The earlier build kept two — voice on this number and
-              WhatsApp on 9049915238 — which meant two `Call` rows for
-              what was effectively one line. With the consolidation
-              to a single 93730 41417 there is now one Call row and
-              one WhatsApp row, both pointing at the same line: the
-              guest dials, the guest messages, and the desk answers
-              either way. The display string lives on `CONTACT` so
-              reformats happen in one place. */}
-          <MaskReveal delay={0.24} duration={0.9}>
-            <ul className="mt-10 border-t border-line">
-              {[
-                {
-                  label: "Call",
-                  value: CONTACT.call.display,
-                  href: CONTACT.call.href,
-                  external: false,
-                },
-                {
-                  label: "WhatsApp",
-                  value: CONTACT.whatsapp.display,
-                  href: CONTACT.whatsapp.href,
-                  external: true,
-                },
-              ].map((row) => (
-                <li key={row.label}>
-                  <a
-                    href={row.href}
-                    data-cursor="hover"
-                    {...(row.external
-                      ? { target: "_blank", rel: "noopener noreferrer" }
-                      : undefined)}
-                    className="group flex items-baseline gap-4 border-b border-line py-4 transition-colors duration-500 hover:border-line-strong md:py-5"
-                  >
-                    <span className="w-28 shrink-0 text-[10px] uppercase tracking-[0.28em] text-ink-faint md:w-32">
-                      {row.label}
-                    </span>
-                    <span
-                      className={`${ROW} transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:-translate-x-1`}
-                    >
-                      {row.value}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </MaskReveal>
-
-          <MaskReveal delay={0.32} duration={0.9}>
-            <div className="mt-10">
-              <ActionButton
-                href={LOCATION.directionsHref}
-                variant="secondary"
-                size="lg"
-                external
-              >
-                Get Directions
-              </ActionButton>
-            </div>
-          </MaskReveal>
-        </WideSection>
+        <Visit />
 
         {/* --------------------------------------------------------------
             Reserve — Turn 10 polish. The closing-pair rail (column 2)

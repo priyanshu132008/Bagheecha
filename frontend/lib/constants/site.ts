@@ -185,6 +185,11 @@ export const SITE = {
   /** TODO(owner): Instagram handle, only rendered in the footer when
    *  set. Format: handle only — the URL builder adds the rest. */
   instagram: "",
+  /** TODO(owner): paste a Google Maps "Embed a map" share URL here.
+   *  The Visit section hides the iframe when empty. The URL must be
+   *  the no-API-key kind produced by Google's "Share → Embed a map"
+   *  flow — no Google Maps JavaScript API key required. */
+  mapsEmbedUrl: "",
   /** TODO(owner): parking / payments / accessibility notes. Each is
    *  a single short sentence; empty hides the row. */
   parkingNote: "",
