@@ -355,21 +355,29 @@ a:focus-visible {
   }
 }
 
-/* Section rhythm — deliberately huge. The whitespace is the luxury; the
-   content is the punctuation.
+/* Section rhythm — generous, but tuned for a page a guest scrolls.
+   The whitespace is still the luxury; the content is still the
+   punctuation — but "deliberate" stops reading as deliberate once the
+   gap between two adjacent sections exceeds the height of either
+   section's content.
 
-   POLISH BRIEF (2026-09-20, G2): one scale across the page. Desktop
-   clamps between 96 and 160 px; below `md` it pins to a compact 72 px
-   so a phone never opens with the same vertical air as a desktop and
-   reads as designed rather than squeezed.
+   POLISH BRIEF (2026-09-21): the previous clamp of 96–160 px per side
+   (peaking at 320 px of cream between two chapters on a 1440 px
+   desktop) read as a page where the content had ended rather than as
+   editorial restraint. The new clamp keeps the same intent — a single
+   scale that grows with viewport — but trims the floor (96 → 72) and
+   the ceiling (160 → 128) so adjacent sections sit ~30% closer at
+   every viewport. Net effect: ~60 px recovered between every chapter
+   pair, the page reads as one book rather than as eight sepia pages,
+   and no section's bottom padding is more than its content height.
 
    The clamp resolves per viewport:
-     1440  -> 12vw = 172.8px -> clamped to 160px
-     1024  -> 12vw = 122.9px (within range, kept)
-     768   -> 12vw =  92.2px -> clamped to  96px (floor)
-     < 768 ->  72px (mobile override below) */
+     1440  ->  8vw = 115.2px -> clamped to 128px (ceiling — was 160)
+     1024  ->  8vw =  81.9px (within range, kept — was ~123)
+     768   ->  8vw =  61.4px -> clamped to  72px (floor — was 96)
+     < 768 ->  56px (mobile override below — was 72) */
 .section-pad {
-  padding-block: clamp(96px, 12vw, 160px);
+  padding-block: clamp(72px, 8vw, 128px);
   /* POLISH BRIEF (2026-09-20, G7). When an in-page anchor is jumped to
      (e.g. clicking `#menus` in the nav), the section's top edge sits
      *below* the viewport's scroll-padding band instead of under it.
@@ -384,11 +392,13 @@ a:focus-visible {
   }
 }
 
-/* Below `md` the page lives in the thumb's reach, and the same 96-160
-   air at desktop becomes dead weight. Pin to 72 px top + 72 px bottom. */
+/* Below `md` the page lives in the thumb's reach, and the same 72-128
+   air at desktop becomes dead weight. Pin to 56 px top + 56 px bottom —
+   three lines of body copy, enough for the eye to register a new
+   chapter without burning a screenful. */
 @media (max-width: 767px) {
   .section-pad {
-    padding-block: 72px;
+    padding-block: 56px;
   }
 }
 

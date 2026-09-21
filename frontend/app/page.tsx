@@ -44,8 +44,9 @@ import { getFeaturedDishes } from "@/lib/menu/queries";
  * Every dark/light distinction is expressed by `data-tone` rather than
  * by passing colours down, so the sections below are written once.
  *
- * `section-pad` is deliberately enormous (6–11rem per side). The
- * whitespace is the luxury here; the content is the punctuation.
+ * `section-pad` is deliberately generous (72–128px per side — was 96–160
+ * before 2026-09-21). The whitespace is the luxury here; the content
+ * is the punctuation.
  */
 
 /** The repeated section shape. Rail left, content on the grid. */
