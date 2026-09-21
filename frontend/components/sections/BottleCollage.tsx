@@ -19,8 +19,11 @@ import type { TopShelfBottle } from "@/lib/menu/queries";
  *    the bar book on the left of the list at `lg` and above.
  *  - `mobile`: a horizontally scrolling row of single polaroids, one per
  *    bottle, sized so at least one and a half cards are visible at any
- *    width below `lg`. The peeking card is the affordance — there is no
- *    visible scrollbar.
+ *    width below `lg`. Cards are `w-[68vw]` with a `max-w-[280px]` ceiling
+ *    so a phone shows a clean two-card layout without ballooning on
+ *    wider mobile widths; `snap-x snap-mandatory scroll-smooth` makes
+ *    swipes land on a card, not between two. The peeking card is the
+ *    affordance — there is no visible scrollbar.
  *
  * The composition in `rail`:
  *
@@ -198,11 +201,11 @@ function MobileBottleRail({
        */
       className="mb-8 w-full max-w-[100vw] overflow-x-hidden"
     >
-      <div className="no-scrollbar flex w-full max-w-[100vw] snap-x flex-nowrap gap-3 overflow-x-auto px-6 pb-1 md:gap-4 md:px-10">
+      <div className="no-scrollbar flex w-full max-w-[100vw] snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto scroll-smooth px-6 pb-1 md:gap-4 md:px-10">
         {bottles.map((bottle) => (
           <div
             key={`${categoryId}-${bottle.id}`}
-            className="relative w-[75vw] shrink-0 snap-center md:w-[42vw]"
+            className="relative w-[68vw] max-w-[280px] shrink-0 snap-center md:w-[42vw]"
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
@@ -225,7 +228,7 @@ function MobileBottleRail({
                     src={bottle.imageUrl}
                     alt={`${bottle.brand} bottle`}
                     fill
-                    sizes="44vw"
+                    sizes="(min-width: 768px) 42vw, 68vw"
                     {...(bottle.blurDataUrl
                       ? { placeholder: "blur" as const, blurDataURL: bottle.blurDataUrl }
                       : { placeholder: "empty" as const })}

@@ -920,7 +920,9 @@ function BarCategoryBlock({
       </header>
 
       {/* The mobile polaroid rail — a single row of the active list's
-          bottles, sized so ~1.5 cards peek at 412px. The peeking card
+          bottles, sized so ~1.5 cards peek at 412px (`w-[68vw]` with a
+          `max-w-[280px]` ceiling keeps two cards fitting cleanly on
+          phones without ballooning on wider mobile). The peeking card
           is the affordance; the row itself is hidden via `no-scrollbar`
           to keep the cue gestural rather than a UI element. `pointer-
           events-none` keeps the carousel from stealing taps from the
