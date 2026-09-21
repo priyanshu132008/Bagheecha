@@ -151,10 +151,10 @@ test.describe("Atmospheres — the pinned glide", () => {
 
     // And the bodies travel with them.
     await expect(section).toContainText(
-      "High-energy, open-air seating with signature cocktails and premium service.",
+      "High-energy, open-air seating with signature cocktails and top-shelf service.",
     );
     await expect(section).toContainText(
-      "Cool, quiet, and elegantly appointed for family celebrations.",
+      "Cool, quiet, and made for family celebrations.",
     );
     await expect(section).toContainText(
       "The everyday non-AC room for fast lunches, big groups and the regulars who know the menu.",

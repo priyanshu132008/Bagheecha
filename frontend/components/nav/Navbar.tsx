@@ -221,7 +221,7 @@ export default function Navbar() {
               data-testid="nav-book"
               className="hidden md:inline-flex"
             >
-              Book a Table
+              Reserve a table
             </ActionButton>
 
             {/* Hamburger → X. The two rules rotate into a cross rather
@@ -305,7 +305,7 @@ export default function Navbar() {
                 onClick={() => setOpen(false)}
                 className="w-full justify-center"
               >
-                Book a Table
+                Reserve a table
               </ActionButton>
             </motion.div>
           </motion.div>

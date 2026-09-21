@@ -1066,7 +1066,7 @@ test.describe("Header", () => {
     await expect(
       page
         .getByRole("navigation", { name: "Primary" })
-        .getByRole("link", { name: "Book a Table" }),
+        .getByRole("link", { name: "Reserve a table" }),
     ).toBeHidden();
   });
 });

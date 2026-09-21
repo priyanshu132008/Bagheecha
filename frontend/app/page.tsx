@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { MaskReveal } from "@/components/motion/MaskReveal";
 import Navbar from "@/components/nav/Navbar";
 import Atmospheres from "@/components/sections/Atmospheres";
+import Footer from "@/components/sections/Footer";
 import Hero from "@/components/sections/Hero";
 import Menu from "@/components/sections/Menu";
 import { OrderOnline } from "@/components/sections/OrderOnline";
@@ -220,6 +221,17 @@ export default async function Home() {
       </main>
 
       <MobileActionBar />
+
+      {/* --------------------------------------------------------------
+          Footer — sibling of <main>, not inside it. Contentinfo is a
+          body-level landmark that closes the document outline; nesting
+          it inside <main> would put it under the main role and assistive
+          tech would read it as content rather than residual metadata.
+          The plum ground closes the book the same way the hero opens
+          it — first frame plum, last frame plum, cream chapters in the
+          middle. See `components/sections/Footer.tsx`.
+      --------------------------------------------------------------- */}
+      <Footer />
     </>
   );
 }

@@ -49,9 +49,9 @@ const formatLocal = (local: string) =>
 ------------------------------------------------------------------- */
 
 /**
- * Reservation template — used by every "Book a Table" / "Reserve a
- * Place" / "Reserve on WhatsApp" button across the site (Navbar,
- * mobile drawer, Hero, `#reserve`, and the MobileActionBar).
+ * Reservation template — used by every "Reserve a table" /
+ * "Reserve on WhatsApp" button across the site (Navbar, mobile
+ * drawer, Hero, `#reserve`, and the MobileActionBar).
  *
  * The fields appear in the order the desk reads them: who, how many,
  * when, where. `Preferred Seating` lists the three zones in
@@ -203,6 +203,14 @@ export const SITE = {
 export const isFilled = (value: string | undefined | null): boolean =>
   typeof value === "string" && value.trim().length > 0;
 
+/** Build an Instagram profile URL from a handle. Strips a leading `@`
+ *  so callers can pass either `@bagheecha` or `bagheecha` and end up
+ *  with the same URL. */
+export const instagramUrl = (handle: string): string => {
+  const trimmed = handle.trim().replace(/^@/, "");
+  return `https://instagram.com/${trimmed}`;
+};
+
 /* ------------------------------------------------------------------
    Navigation — every href must resolve to a real id on the page.
 
@@ -241,7 +249,7 @@ export const ZONES = [
     name: "Terrace Lounge",
     tagline: "Open-air, high-energy, last to close",
     detail:
-      "Rooftop seating under a timber roof, signature cocktails, premium bottles and pot service.",
+      "Rooftop seating under a timber roof, signature cocktails, top-shelf bottles and pot service.",
   },
   {
     id: "ac",
