@@ -18,7 +18,7 @@
  *   - The cream asterisk brand mark, enlarged to a wordmark-equivalent
  *     glyph at the upper-centre. Same shape as `app/icon.svg` but
  *     drawn with ImageResponse primitives.
- *   - "Hotel Bagheecha" in Playfair Display Bold.
+ *   - "Hotel Bageecha" in Playfair Display Bold.
  *   - A single tagline below: "Restaurant, Terrace Lounge & Bar".
  *   - The locality as the smallest line: "Virar · Maharashtra".
  *
@@ -41,7 +41,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "nodejs"; /* @vercel/og requires Node, not Edge */
-export const alt = "Hotel Bagheecha — Restaurant, Terrace Lounge & Bar in Virar";
+export const alt = "Hotel Bageecha — Restaurant, Terrace Lounge & Bar in Virar";
 export const size = { width: 1200, height: 630 } as const;
 export const contentType = "image/png";
 
@@ -133,7 +133,7 @@ export default async function OpengraphImage() {
             marginTop: 36,
           }}
         >
-          Hotel Bagheecha
+          Hotel Bageecha
         </div>
 
         {/* Hairline */}

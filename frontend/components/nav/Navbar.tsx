@@ -171,10 +171,10 @@ export default function Navbar() {
           {/* Wordmark — tracked-out display caps, no ornament. */}
           <a
             href="#top"
-            aria-label="Hotel Bagheecha — back to top"
+            aria-label="Hotel Bageecha — back to top"
             className="font-display text-base uppercase leading-none tracking-[0.34em] text-ink transition-opacity duration-300 hover:opacity-70 md:text-lg"
           >
-            Bagheecha
+            Hotel Bageecha
           </a>
 
           {/* Desktop links */}

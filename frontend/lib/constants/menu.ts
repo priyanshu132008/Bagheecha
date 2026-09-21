@@ -1,7 +1,7 @@
 /**
  * The menu — transcribed from the hotel's own printed cards.
  *
- * SOURCE. `Bagheecha/Untitled document.docx` is not a document with text
+ * SOURCE. `Bageecha/Untitled document.docx` is not a document with text
  * in it: it is ten photographs of the physical menu, at 720x1280. Every
  * name and every figure below was read off those photographs by eye. The
  * cards are two books — a green food menu and a black bar menu, both
@@ -22,11 +22,12 @@
  * prices both. Bar spirits are sold in up to five measures, so they are
  * modelled as a matrix instead — see `Pour`.
  *
- * TWO SPELLINGS WORTH KNOWING. The printed card says "BAGEECHA" on its
- * cover, without the `h`; the site, the signage and every other asset use
- * "Bagheecha". The site's spelling wins, so the one dish named after the
- * hotel reads "Bagheecha's Special Soup". Brand names printed with obvious
- * typos (`BUSWEISER`, `TUBOURG`, `ROMONOV`) are set to their real
+ * TWO SPELLINGS WORTH KNOWING. Earlier iterations of the brand rendered
+ * the name with the extra `h` (`Bagheecha`); the current house style —
+ * site, signage, OG image, menu — is `Bageecha`. The dish named after
+ * the hotel accordingly reads "Bageecha's Special Soup". Brand names
+ * printed with obvious typos (`BUSWEISER`, `TUBOURG`, `ROMONOV`) are set
+ * to their real
  * spellings, because on a premium page a misspelt brand reads as *our*
  * mistake rather than the printer's.
  *
@@ -55,7 +56,7 @@ export type Dish = {
    *   `true`  → the row renders a green-tinted marker (`VegMarker`)
    *   `false` → the row renders a brown-tinted marker
    *   omitted → the row carries no marker at all (groups where the
-   *            heuristic can't decide, e.g. `bread`, `Bagheecha's Special
+   *            heuristic can't decide, e.g. `bread`, `Bageecha's Special
    *            Soup`, `Butter Milk`). The marker is honest about its own
    *            limits, and "I don't know" is the safest answer when the
    *            printed card doesn't disambiguate.
@@ -242,7 +243,7 @@ export const FOOD: FoodCategory[] = [
         id: "soups",
         name: "Soups",
         items: [
-          { name: "Bagheecha's Special Soup", price: 230, note: "Gavathi" },
+          { name: "Bageecha's Special Soup", price: 230, note: "Gavathi" },
           { name: "Chicken Clear Soup", price: 200 },
           { name: "Chicken Manchow Soup", price: 200 },
           { name: "Chicken Hot & Sour Soup", price: 200 },

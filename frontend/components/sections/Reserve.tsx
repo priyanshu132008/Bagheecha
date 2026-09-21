@@ -187,7 +187,7 @@ function ReservationForm() {
     // desk reads it in the order they already know.
     const preferredSeating = SEATING_OPTIONS.find((o) => o.value === seating)?.label ?? seating;
     const message =
-      `Hi Hotel Bagheecha! I would like to reserve a table.\n\n` +
+      `Hi Hotel Bageecha! I would like to reserve a table.\n\n` +
       `Name: ${name.trim()}\n` +
       `Number of People: ${guests}\n` +
       `Date: ${date}\n` +

@@ -51,7 +51,7 @@ const FOOTER_LINK =
   "transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-cream";
 
 /* ------------------------------------------------------------------
-   The wordmark. The same `bagheecha*` lockup the hero opens on,
+   The wordmark. The same `bageecha*` lockup the hero opens on,
    sized down for the footer's quieter reading weight. The leading
    "Hotel" sits in an sr-only span so the link's accessible name is
    the real one; the asterisk is `aria-hidden` because it is the
@@ -66,7 +66,7 @@ function FooterWordmark() {
       className="inline-block font-display text-[clamp(2.5rem,6vw,4rem)] font-normal leading-none tracking-tighter text-cream"
     >
       <span className="sr-only">Hotel </span>
-      bagheecha
+      bageecha
       <span aria-hidden="true" className="text-vermillion">
         *
       </span>

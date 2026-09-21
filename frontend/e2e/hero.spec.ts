@@ -395,18 +395,25 @@ test.describe("Hero — first impression", () => {
     await page.goto("/");
 
     // The accessible name is the real one. The visible text is
-    // "bagheecha*" — lowercase, with an asterisk that is `aria-hidden`
+    // "bageecha*" — lowercase, with an asterisk that is `aria-hidden`
     // because it is a mark rather than a character — and a screen reader
-    // announcing "bagheecha asterisk" would be reading punctuation as
+    // announcing "bageecha asterisk" would be reading punctuation as
     // branding. The `sr-only` "Hotel" in front of it is what makes the
     // name correct, so it is asserted here rather than trusted.
     const h1 = page.getByRole("heading", { level: 1 });
-    await expect(h1).toContainText("bagheecha");
-    await expect(h1).toHaveAccessibleName(/Hotel\s+bagheecha/i);
+    await expect(h1).toContainText("bageecha");
+    await expect(h1).toHaveAccessibleName(/Hotel\s+bageecha/i);
     await expect(h1).not.toHaveAccessibleName(/asterisk|\*/i);
 
-    await expect(page.getByRole("link", { name: "Reserve a table" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "View the menu" })).toBeVisible();
+    // Scope to the hero's CTA group: the navbar carries its own
+    // "Reserve a table" CTA too, and `getByRole` with the same name
+    // hits both under strict mode. Asserting inside `#top` keeps the
+    // assertion on what this test actually means — the hero CTAs.
+    const hero = page.locator("#top");
+    await expect(
+      hero.getByRole("link", { name: "Reserve a table" }),
+    ).toBeVisible();
+    await expect(hero.getByRole("link", { name: "View the menu" })).toBeVisible();
   });
 
   test("the backdrop never intrudes on the type", async ({ page }) => {
@@ -755,7 +762,7 @@ test.describe("Hero — first impression", () => {
   test("reduced-motion users get a still, complete page", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("bagheecha");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("bageecha");
     await expect(page.getByRole("link", { name: "Reserve a table" })).toBeVisible();
 
     // The panels must stop *and* stop in the right place, and the right
@@ -1125,7 +1132,7 @@ test.describe("Mobile quick-action bar", () => {
 });
 
 test.describe("Page health", () => {
-  test("the directions URL spells Bagheecha correctly", async ({ page }) => {
+  test("the directions URL spells Bageecha correctly", async ({ page }) => {
     await page.goto("/");
     const link = page.getByRole("link", { name: "Get Directions" });
     await expect(link).toHaveAttribute(

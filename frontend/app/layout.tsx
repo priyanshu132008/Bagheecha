@@ -63,8 +63,8 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://hotelbagheecha.com",
   ),
   title: {
-    default: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
-    template: "%s — Hotel Bagheecha",
+    default: "Hotel Bageecha — Restaurant, Bar & Rooftop Terrace in Virar",
+    template: "%s — Hotel Bageecha",
   },
   description:
     "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables. Reserve on WhatsApp.",
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
+    title: "Hotel Bageecha — Restaurant, Bar & Rooftop Terrace in Virar",
     description:
       "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables.",
     url: "/",
@@ -95,7 +95,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Hotel Bagheecha — Restaurant, Bar & Rooftop Terrace in Virar",
+    title: "Hotel Bageecha — Restaurant, Bar & Rooftop Terrace in Virar",
     description:
       "Rooftop restaurant, late-night bar and AC dining room in Virar — tandoori, cocktails and family tables.",
     images: ["/opengraph-image"],

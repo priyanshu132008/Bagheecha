@@ -17,7 +17,7 @@ import { test, expect, type Page } from "@playwright/test";
  *    the cards back into source order would re-introduce the exact
  *    hierarchy the brief rejected;
  *  - the Direct CTA opens a `wa.me` link with the brief's verbatim
- *    opener ("Hi Bagheecha, I'd like to place an order."). A
+ *    opener ("Hi Bageecha, I'd like to place an order."). A
  *    regression to the structured `WHATSAPP_ORDER_HREF` template
  *    would land a guest in a six-field form they have not asked for;
  *  - the Swiggy CTA opens the partner URL with `?source=sharing`
@@ -135,7 +135,7 @@ test.describe("Order — two standalone cards", () => {
   }) => {
     await open(page);
 
-    // `waLink("Hi Bagheecha, I'd like to place an order.")` produces
+    // `waLink("Hi Bageecha, I'd like to place an order.")` produces
     // a wa.me URL with the message encoded. A regression to the
     // structured `WHATSAPP_ORDER_HREF` template (Name / Address /
     // Order Details) would land a guest in a six-field form rather
@@ -146,7 +146,7 @@ test.describe("Order — two standalone cards", () => {
     expect(href).toMatch(/^https:\/\/wa\.me\/91\d{10}\?text=/);
     // The brief's opener, URL-encoded. Apostrophe is `%27`, comma is
     // `%2C`, space is `%20`.
-    expect(href).toContain("Hi%20Bagheecha");
+    expect(href).toContain("Hi%20Bageecha");
     expect(href).toContain("place%20an%20order");
     // The CTA's visible label.
     await expect(cta).toContainText("Order on WhatsApp");

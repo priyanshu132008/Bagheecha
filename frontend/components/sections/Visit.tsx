@@ -259,7 +259,7 @@ function VisitMapEmbed() {
   return (
     <figure className="mt-10 overflow-hidden rounded-xs border border-line">
       <iframe
-        title="Hotel Bagheecha on Google Maps"
+        title="Hotel Bageecha on Google Maps"
         src={SITE.mapsEmbedUrl}
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"

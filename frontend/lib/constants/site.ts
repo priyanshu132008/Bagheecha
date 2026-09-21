@@ -60,7 +60,7 @@ const formatLocal = (local: string) =>
  * whether "rooftop" and "terrace" are the same thing.
  */
 export const RESERVATION_MESSAGE =
-  "Hi Hotel Bagheecha! I would like to reserve a table.\n\nName: \nNumber of People: \nDate: \nTime: \nPreferred Seating (Terrace/AC/Classic): ";
+  "Hi Hotel Bageecha! I would like to reserve a table.\n\nName: \nNumber of People: \nDate: \nTime: \nPreferred Seating (Terrace/AC/Classic): ";
 
 /**
  * Direct-order template — used only by the "WhatsApp the Kitchen"
@@ -69,7 +69,7 @@ export const RESERVATION_MESSAGE =
  * into the prep queue.
  */
 export const ORDER_MESSAGE =
-  "Hi Hotel Bagheecha! I would like to place a direct order for delivery/takeaway.\n\nName: \nDelivery Address: \nOrder Details: ";
+  "Hi Hotel Bageecha! I would like to place a direct order for delivery/takeaway.\n\nName: \nDelivery Address: \nOrder Details: ";
 
 /** The exact reservation href, ready to drop into `href=`. */
 export const WHATSAPP_RESERVATION_HREF = toWhatsApp(
@@ -124,7 +124,7 @@ export const DIRECTIONS_URL =
   "https://www.google.com/maps/dir/?api=1&destination=Hotel+Bagheecha+Virar";
 
 export const LOCATION = {
-  name: "Hotel Bagheecha",
+  name: "Hotel Bageecha",
   locality: "Virar",
   region: "Maharashtra",
   directionsHref: DIRECTIONS_URL,
@@ -142,11 +142,11 @@ export const LOCATION = {
 ------------------------------------------------------------------- */
 export const SITE = {
   name: LOCATION.name,
-  shortName: "Bagheecha",
+  shortName: "Bageecha",
   /** TODO(owner): confirm tagline or leave blank to omit */
   tagline: "",
   /** TODO(owner): confirm street address. The current setup displays
-   *  "Hotel Bagheecha, Virar" because no street was provided. */
+   *  "Hotel Bageecha, Virar" because no street was provided. */
   addressLine1: "",
   addressLine2: "",
   /** TODO(owner): nearby landmark — empty hides the row. */
@@ -204,7 +204,7 @@ export const isFilled = (value: string | undefined | null): boolean =>
   typeof value === "string" && value.trim().length > 0;
 
 /** Build an Instagram profile URL from a handle. Strips a leading `@`
- *  so callers can pass either `@bagheecha` or `bagheecha` and end up
+ *  so callers can pass either `@bageecha` or `bageecha` and end up
  *  with the same URL. */
 export const instagramUrl = (handle: string): string => {
   const trimmed = handle.trim().replace(/^@/, "");

@@ -14,7 +14,7 @@ import { SITE, isFilled, waLink } from "@/lib/constants/site";
  *   - LEFT (Direct). Deep plum ground, cream type, ONE filled `primary`
  *     CTA. The link is built with `waLink(...)` rather than the
  *     structured `WHATSAPP_ORDER_HREF` template because the brief asks
- *     for a short, single-sentence opener ("Hi Bagheecha, I'd like to
+ *     for a short, single-sentence opener ("Hi Bageecha, I'd like to
  *     place an order.") rather than the six-field form that lands
  *     elsewhere. Guests landing on the section are not yet committed
  *     to an order; a friendly opener converts better than a form they
@@ -69,7 +69,7 @@ export function OrderOnline() {
     <section
       id="order"
       data-tone="light"
-      aria-label="Order from Hotel Bagheecha"
+      aria-label="Order from Hotel Bageecha"
       className="section-pad bg-surface"
     >
       <div className="container-x">
@@ -108,7 +108,7 @@ export function OrderOnline() {
 
             <div>
               <ActionButton
-                href={waLink("Hi Bagheecha, I'd like to place an order.")}
+                href={waLink("Hi Bageecha, I'd like to place an order.")}
                 variant="primary"
                 size="lg"
                 external

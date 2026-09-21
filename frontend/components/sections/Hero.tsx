@@ -53,7 +53,7 @@ import type { FeaturedDish } from "@/lib/menu/queries";
  * negative tracking, anchored bottom-left — a wordmark rather than a
  * headline with a subtitle under it. The asterisk is the only
  * vermillion on the first screen and it is `aria-hidden`: it is a
- * mark, not a character, and "bagheecha asterisk" is not the name of
+ * mark, not a character, and "bageecha asterisk" is not the name of
  * the restaurant. The `sr-only` "Hotel" in front of it is, so the
  * accessible name is the real one.
  *
@@ -170,7 +170,7 @@ export default function Hero({ featuredDishes }: { featuredDishes: FeaturedDish[
         <h1 className="mt-4 font-display text-[clamp(3.2rem,10.5vw,9rem)] font-normal leading-[0.85] tracking-tighter text-ink">
           <MaskRise delay={0.18}>
             <span className="sr-only">Hotel </span>
-            bagheecha
+            bageecha
             <span aria-hidden="true" className="text-vermillion">
               *
             </span>
